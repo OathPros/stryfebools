@@ -21,12 +21,13 @@ const picture = document.querySelector('.hero-picture');
 const sceneSource = picture.querySelector('source');
 const sceneImage = picture.querySelector('img');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-const smallScreen = matchMedia('(max-width: 760px)');
+const portraitArt = matchMedia(sceneSource.media);
 const touchOnly = matchMedia('(hover: none) and (pointer: coarse)');
 const sceneTemplate = document.querySelector('#hero-scenes');
 const scenes = Array.from(sceneTemplate.content.children, ({ dataset }) => ({
   full: new URL(dataset.full, document.baseURI).href,
   small: new URL(dataset.small, document.baseURI).href,
+  focusX: Number(dataset.focusX ?? .5),
   focusY: Number(dataset.focusY ?? .5),
   zoom: Number(dataset.zoom ?? 1),
   pending: new Map(),
@@ -72,8 +73,8 @@ uniform float uTransition;
 uniform float uDwell;
 uniform float uAspectCurrent;
 uniform float uAspectNext;
-uniform float uFocusCurrent;
-uniform float uFocusNext;
+uniform vec2 uFocusCurrent;
+uniform vec2 uFocusNext;
 uniform float uZoomCurrent;
 uniform float uZoomNext;
 uniform vec3 uSignalFocus;
@@ -85,15 +86,15 @@ float hash(vec2 point, float seed) {
 }
 float hash(vec2 point) { return hash(point, 0.); }
 
-vec2 cover(vec2 uv, float pictureAspect, float focusY, float zoom) {
-  vec2 anchor = vec2(.5, focusY);
+vec2 cover(vec2 uv, float pictureAspect, vec2 anchor, float zoom) {
   uv = anchor + (uv - anchor) / zoom;
   float screenAspect = uResolution.x / uResolution.y;
   if (screenAspect > pictureAspect) {
     float visible = pictureAspect / screenAspect;
-    uv.y = (1. - visible) * focusY + uv.y * visible;
+    uv.y = (1. - visible) * anchor.y + uv.y * visible;
   } else {
-    uv.x = .5 + (uv.x - .5) * screenAspect / pictureAspect;
+    float visible = screenAspect / pictureAspect;
+    uv.x = (1. - visible) * anchor.x + uv.x * visible;
   }
   return uv;
 }
@@ -142,7 +143,7 @@ void main() {
 
 
 function variant(scene) {
-  return smallScreen.matches ? scene.small : scene.full;
+  return portraitArt.matches ? scene.small : scene.full;
 }
 
 function loadScene(scene, url = variant(scene)) {
@@ -239,8 +240,9 @@ function uploadScene(index, url, image) {
 function showScene(index, url) {
   const scene = scenes[index];
   current = index;
-  sceneSource.srcset = url === scene.full ? scene.small : url;
-  sceneImage.src = url === scene.small ? scene.small : scene.full;
+  sceneSource.srcset = portraitArt.matches && url === scene.full ? scene.full : scene.small;
+  sceneImage.src = scene.full;
+  picture.style.setProperty('--scene-x', `${scene.focusX * 100}%`);
   picture.style.setProperty('--scene-zoom', scene.zoom);
   picture.style.setProperty('--scene-y', `${(1 - scene.focusY) * 100}%`);
   dwell = 0;
@@ -412,8 +414,8 @@ function drawFrame(now) {
   gl.uniform3f(uniforms.uSignalFocus, focusPosition.x, focusPosition.y, staticFocus);
   gl.uniform1f(uniforms.uAspectCurrent, activeEntry.aspect);
   gl.uniform1f(uniforms.uAspectNext, nextEntry.aspect);
-  gl.uniform1f(uniforms.uFocusCurrent, scenes[current].focusY);
-  gl.uniform1f(uniforms.uFocusNext, scenes[nextIndex].focusY);
+  gl.uniform2f(uniforms.uFocusCurrent, scenes[current].focusX, scenes[current].focusY);
+  gl.uniform2f(uniforms.uFocusNext, scenes[nextIndex].focusX, scenes[nextIndex].focusY);
   gl.uniform1f(uniforms.uZoomCurrent, scenes[current].zoom);
   gl.uniform1f(uniforms.uZoomNext, scenes[nextIndex].zoom);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
@@ -446,7 +448,7 @@ canvas.addEventListener('webglcontextlost', event => {
 });
 
 reducedMotion.addEventListener('change', event => setMotion(!event.matches));
-smallScreen.addEventListener('change', () => {
+portraitArt.addEventListener('change', () => {
   if (motionOn) prepareTextures();
 });
 

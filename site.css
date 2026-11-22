@@ -99,10 +99,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 50% var(--scene-y, 31%);
+  object-position: var(--scene-x, 50%) var(--scene-y, 50%);
   filter: grayscale(1) brightness(.75) contrast(1.08);
-  transform: scale(var(--scene-zoom, 1.10));
-  transform-origin: 50% var(--scene-y, 31%);
+  transform: scale(var(--scene-zoom, 1));
+  transform-origin: var(--scene-x, 50%) var(--scene-y, 50%);
 }
 #world { display: none; pointer-events: none; }
 #world.is-rendering { display: block; }
