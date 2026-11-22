@@ -198,7 +198,7 @@ h2 { font-size: clamp(3.6rem, 8vw, 8rem); line-height: .95; }
 .track-label .signal-mark { color: #555; }
 .soundcloud-group { margin-top: clamp(1.5rem, 4vw, 3rem); }
 .soundcloud-group h3 { margin: 0 0 .85rem; font-size: clamp(1.25rem, 3vw, 2rem); }
-.track-list { display: grid; gap: 1rem; list-style: none; padding: 0; margin: 0; }
+.track-list { display: grid; gap: .45rem; list-style: none; padding: 0; margin: 0; }
 .player { margin-top: 1rem; padding: .85rem; background: #1c1c1c; color: var(--paper); color-scheme: dark; }
 .player :focus-visible { outline-color: #8e8e8e; }
 .signal-link { text-decoration: none; }
@@ -219,17 +219,31 @@ h2 { font-size: clamp(3.6rem, 8vw, 8rem); line-height: .95; }
 .player iframe { border: 0; width: 100%; display: block; background: #2d2d2d; }
 .soundcloud-player {
   margin-top: 0;
+  padding: 0;
   border-inline-start: 3px solid #ff5500;
-  display: grid;
-  grid-template-columns: minmax(7rem, 11rem) minmax(0, 1fr);
-  grid-template-areas: "art title" "art embed" "art direct";
-  align-items: start;
-  gap: .7rem 1rem;
 }
-.release-art { grid-area: art; display: block; width: 100%; height: auto; }
-.release-title { grid-area: title; margin: 0; font-size: 1rem; }
-.soundcloud-player iframe { grid-area: embed; }
-.soundcloud-player .player-link { grid-area: direct; justify-self: start; margin-top: 0; }
+.soundcloud-player summary {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .7rem;
+  padding: .4rem .7rem;
+  list-style: none;
+  cursor: pointer;
+}
+.soundcloud-player summary::-webkit-details-marker { display: none; }
+.soundcloud-player summary::after {
+  content: "+";
+  color: #bdbdbd;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+.soundcloud-player details[open] summary::after { content: "−"; }
+.soundcloud-player summary:hover { background: #2c2c2c; }
+.soundcloud-player summary:focus-visible { outline-offset: -3px; }
+.release-art { display: block; object-fit: cover; }
+.release-title { font-size: .95rem; font-weight: 700; overflow-wrap: anywhere; }
+.release-player { padding: .35rem .7rem .7rem; }
 .spotify-player {
   margin-top: clamp(1.5rem, 4vw, 3rem);
   border-inline-start: 3px solid #1ed760;
@@ -274,11 +288,6 @@ footer {
 }
 
 @media (max-width: 680px) {
-  .soundcloud-player {
-    grid-template-columns: 3.75rem minmax(0, 1fr);
-    grid-template-areas: "art title" "embed embed" "direct direct";
-  }
-  .soundcloud-player .release-title { align-self: center; }
   .soundcloud-player .player-link { width: 100%; justify-content: center; text-align: center; }
   .section-heading { flex-wrap: wrap; align-items: start; }
 }
