@@ -22,6 +22,7 @@ const sceneSource = picture.querySelector('source');
 const sceneImage = picture.querySelector('img');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const smallScreen = matchMedia('(max-width: 760px)');
+const touchOnly = matchMedia('(hover: none) and (pointer: coarse)');
 const sceneTemplate = document.querySelector('#hero-scenes');
 const scenes = Array.from(sceneTemplate.content.children, ({ dataset }) => ({
   full: new URL(dataset.full, document.baseURI).href,
@@ -36,6 +37,7 @@ if (scenes.length < 2) return;
 
 const transitionDuration = 1.65;
 const dwellDuration = 3.5;
+const automaticDwellDuration = 5.5;
 let gl, program;
 const uniforms = {};
 let motionOn = !reducedMotion.matches;
@@ -75,11 +77,13 @@ uniform float uFocusNext;
 uniform float uZoomCurrent;
 uniform float uZoomNext;
 uniform vec3 uSignalFocus;
-float hash(vec2 point) {
-  vec3 p = fract(vec3(point.xyx) * .1031);
+float hash(vec2 point, float seed) {
+  vec3 salt = fract(seed * vec3(.1030, .1099, .1379));
+  vec3 p = fract(vec3(point.xyx) * .1031 + salt);
   p += dot(p, p.yzx + 33.33);
   return fract((p.x + p.y) * p.z);
 }
+float hash(vec2 point) { return hash(point, 0.); }
 
 vec2 cover(vec2 uv, float pictureAspect, float focusY, float zoom) {
   vec2 anchor = vec2(.5, focusY);
@@ -122,13 +126,14 @@ void main() {
   float picture = dot(mix(currentArt, nextArt, retune), vec3(.2126, .7152, .0722)) * .89;
 
   vec2 cell = floor(uv * vec2(310. * aspect, 310.));
-  float snow = hash(cell + vec2(field * 17., field * 11.));
-  float streak = hash(vec2(floor(cell.x / 6.), cell.y) + vec2(field, field * 3.));
+  // Reseed each field instead of translating the noise across the screen.
+  float snow = hash(cell, field);
+  float streak = hash(vec2(floor(cell.x / 6.), cell.y), field + 31.);
   // Moderate contrast and a steady mean keep the moving snow from becoming a strobe.
   float interference = .43 + (snow - .5) * .55 + (streak - .5) * .13;
   float scanline = .94 + .06 * cos(uv.y * 290. * 6.283185);
   float noiseMix = clamp(tuning * .90 + tracking * tuning * .16 + contact * .81 + buildup * .30, 0., .97);
-  float grain = hash(floor(gl_FragCoord.xy) + vec2(field, 0.)) - .5;
+  float grain = hash(floor(gl_FragCoord.xy), field + 71.) - .5;
   float phosphor = .96 + .04 * cos(gl_FragCoord.x * 2.094395);
   float gray = mix(picture, interference, noiseMix) * scanline * phosphor + grain * .068;
   gray *= 1. - .40 * smoothstep(.18, .88, length(uv - .5));
@@ -366,9 +371,11 @@ function drawFrame(now) {
     scheduleFrame();
     return;
   }
-  const delta = lastFrame ? Math.min(.065, interval) : 0;
+  const delta = lastFrame ? Math.min(.15, interval) : 0;
   lastFrame = now;
   clock += delta;
+  const automatic = touchOnly.matches;
+  const buildupDuration = automatic ? automaticDwellDuration : dwellDuration;
   if (transition) {
     transition.elapsed += delta;
     if (transition.elapsed >= transitionDuration) {
@@ -379,11 +386,12 @@ function drawFrame(now) {
       prepareTextures();
     }
   } else if (requested === current) {
-    dwell = pointer ? Math.min(dwell + delta, dwellDuration) : Math.max(0, dwell - delta * 2);
-    if (pointer && dwell >= dwellDuration) requestScene((current + 1) % scenes.length);
+    const building = automatic || Boolean(pointer);
+    dwell = building ? Math.min(dwell + delta, buildupDuration) : Math.max(0, dwell - delta * 2);
+    if (building && dwell >= buildupDuration) requestScene((current + 1) % scenes.length);
   }
 
-  const progress = dwell / dwellDuration;
+  const progress = Math.min(1, dwell / buildupDuration);
   const targetFocus = pointer ? (heldPointer === undefined ? .20 + progress * .67 : 1) : 0;
   staticFocus += (targetFocus - staticFocus) * (1. - Math.exp(-delta * 10));
   if (pointer) focusPosition = pointer;
@@ -444,14 +452,14 @@ smallScreen.addEventListener('change', () => {
 
 new ResizeObserver(resize).observe(surface);
 new IntersectionObserver(([entry]) => {
-  visible = entry.isIntersecting;
+  visible = entry.intersectionRatio >= .25;
   if (!visible) {
     lastFrame = 0;
     pointer = undefined;
     dwell = 0;
   }
   scheduleFrame();
-}).observe(hero);
+}, { threshold: .25 }).observe(hero);
 document.addEventListener('visibilitychange', () => {
   lastFrame = 0;
   scheduleFrame();

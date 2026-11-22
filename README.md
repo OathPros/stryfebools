@@ -6,7 +6,7 @@ Artist website with a cinematic homepage, and embedded SoundCloud and Spotify pl
 
 Run `python3 -m http.server 8080` from the checkout, then open `http://localhost:8080`. A local HTTP server gives the artwork and shader textures the same origin.
 
-The hero uses local, responsive WebP images. With WebGL and motion enabled, keeping a pointer over the hero builds television static and changes the artwork after about 3.5 seconds. Pressing or dragging concentrates static under the pointer or fingertip. Vertical swipes scroll the page. The browser’s reduced-motion preference leaves the opening image still.
+The hero uses local, responsive WebP images. With WebGL and motion enabled, keeping a pointer over the hero builds television static and changes the artwork after about 3.5 seconds. On touch-only devices, static builds automatically and changes the artwork after about 5.5 seconds while the hero is visible. Pressing or dragging concentrates static under the pointer or fingertip. Vertical swipes scroll the page. The browser’s reduced-motion preference leaves the opening image still.
 
 ## Update the content
 
