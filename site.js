@@ -1,13 +1,13 @@
 (() => {
 'use strict';
 
-for (const link of document.querySelectorAll('.listen, .masthead .platform')) {
+for (const link of document.querySelectorAll('.signal-link')) {
   link.addEventListener('click', event => {
     link.classList.add('signal-revealed');
     if (link.origin === location.origin || event.button !== 0 ||
         event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 
-    // Give the symbol a moment to appear before leaving for SoundCloud.
+    // Give the symbol a moment to appear before leaving for an external player.
     event.preventDefault();
     setTimeout(() => location.assign(link.href), 220);
   });
