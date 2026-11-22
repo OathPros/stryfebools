@@ -37,8 +37,8 @@ const scenes = Array.from(sceneTemplate.content.children, ({ dataset }) => ({
 if (scenes.length < 2) return;
 
 const transitionDuration = 1.65;
-const dwellDuration = 3.5;
-const automaticDwellDuration = 5.5;
+const dwellDuration = 5.5;
+const hoverBuildupRate = dwellDuration / 3.5;
 let gl, program;
 const uniforms = {};
 let motionOn = !reducedMotion.matches;
@@ -133,7 +133,7 @@ void main() {
   // Moderate contrast and a steady mean keep the moving snow from becoming a strobe.
   float interference = .43 + (snow - .5) * .55 + (streak - .5) * .13;
   float scanline = .94 + .06 * cos(uv.y * 290. * 6.283185);
-  float noiseMix = clamp(tuning * .90 + tracking * tuning * .16 + contact * .81 + buildup * .30, 0., .97);
+  float noiseMix = clamp(.08 + tuning * .90 + tracking * tuning * .16 + contact * .81 + buildup * .30, 0., .97);
   float grain = hash(floor(gl_FragCoord.xy), field + 71.) - .5;
   float phosphor = .96 + .04 * cos(gl_FragCoord.x * 2.094395);
   float gray = mix(picture, interference, noiseMix) * scanline * phosphor + grain * .068;
@@ -376,8 +376,6 @@ function drawFrame(now) {
   const delta = lastFrame ? Math.min(.15, interval) : 0;
   lastFrame = now;
   clock += delta;
-  const automatic = touchOnly.matches;
-  const buildupDuration = automatic ? automaticDwellDuration : dwellDuration;
   if (transition) {
     transition.elapsed += delta;
     if (transition.elapsed >= transitionDuration) {
@@ -388,12 +386,12 @@ function drawFrame(now) {
       prepareTextures();
     }
   } else if (requested === current) {
-    const building = automatic || Boolean(pointer);
-    dwell = building ? Math.min(dwell + delta, buildupDuration) : Math.max(0, dwell - delta * 2);
-    if (building && dwell >= buildupDuration) requestScene((current + 1) % scenes.length);
+    const rate = pointer && !touchOnly.matches ? hoverBuildupRate : 1;
+    dwell = Math.min(dwell + delta * rate, dwellDuration);
+    if (dwell >= dwellDuration) requestScene((current + 1) % scenes.length);
   }
 
-  const progress = Math.min(1, dwell / buildupDuration);
+  const progress = dwell / dwellDuration;
   const targetFocus = pointer ? (heldPointer === undefined ? .20 + progress * .67 : 1) : 0;
   staticFocus += (targetFocus - staticFocus) * (1. - Math.exp(-delta * 10));
   if (pointer) focusPosition = pointer;
@@ -410,7 +408,7 @@ function drawFrame(now) {
   const transitionProgress = (transition?.elapsed ?? 0) / transitionDuration;
   gl.uniform1f(uniforms.uTransition, transitionProgress);
   setTextTracking(transitionProgress);
-  gl.uniform1f(uniforms.uDwell, progress * progress);
+  gl.uniform1f(uniforms.uDwell, progress);
   gl.uniform3f(uniforms.uSignalFocus, focusPosition.x, focusPosition.y, staticFocus);
   gl.uniform1f(uniforms.uAspectCurrent, activeEntry.aspect);
   gl.uniform1f(uniforms.uAspectNext, nextEntry.aspect);
