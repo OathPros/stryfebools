@@ -59,9 +59,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
   height: 100vh;
   height: 100svh;
   overflow: hidden;
-  border-radius: 4.1% / 6.4%;
-  background: #050505;
-  box-shadow: 0 0 0 1px #3a3a3a, 0 0 0 4px #0b0b0b;
+  border: clamp(7px, 1.45vw, 24px) solid transparent;
+  border-radius: clamp(25px, 4.4vw, 80px) / clamp(27px, 7vh, 72px);
+  background:
+    linear-gradient(#050505, #050505) padding-box,
+    linear-gradient(152deg, #888 0%, #3a3a3a 2%, #202020 18%, #303030 56%, #080808 86%, #2e2e2e 100%) border-box;
+  box-shadow: inset 0 0 0 1px #747474, inset 0 0 0 4px #090909, 0 2px 6px #080808;
 }
 .scene-surface, .hero-picture, #world, .hero-scrim {
   position: absolute;
@@ -69,7 +72,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
   width: 100%;
   height: 100%;
 }
-.scene-surface { overflow: hidden; }
+.scene-surface, .hero-scrim, .crt-overlay {
+  border-radius: clamp(14px, 3.5vw, 60px) / clamp(17px, 5.7vh, 56px);
+}
+.scene-surface, .crt-overlay { overflow: hidden; }
 .scene-surface.interactive { touch-action: pan-y pinch-zoom; }
 .hero-picture { pointer-events: none; user-select: none; }
 .hero-picture img {
@@ -86,15 +92,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
 #world.is-rendering { display: block; }
 .hero-scrim {
   pointer-events: none;
-  border-radius: inherit;
   background:
     linear-gradient(to bottom, #050505bb, transparent 21%),
     radial-gradient(ellipse at 12% -11%, #e0e0e03e 0, #d8d8d815 14%, transparent 39%),
     radial-gradient(ellipse at 108% 98%, #bbb2, transparent 33%),
     linear-gradient(149deg, #d0d0d011 2%, transparent 35%),
     radial-gradient(ellipse at 49% 45%, transparent 37%, #08080838 66%, #020202dd 103%);
-  box-shadow: inset 0 0 3px 2px #090909, inset 0 0 19px 6px #0c0c0c,
-    inset 0 3px 3px #c6c6c63d, inset 0 -3px 7px #000b;
+  box-shadow: inset 0 0 0 1px #000, inset 0 0 0 3px #101010,
+    inset 0 0 0 5px #86868638, inset 0 0 24px 9px #080808,
+    inset 0 3px 6px #c6c6c64d, inset 0 -4px 9px #000d;
 }
 .crt-filter {
   position: absolute;
@@ -227,7 +233,6 @@ footer {
 
 @media (max-width: 760px) {
   .masthead { min-height: 4rem; }
-  .hero { border-radius: 7% / 4.5%; }
   .hero h1 { font-size: clamp(2rem, 17vw, 8rem); }
 }
 

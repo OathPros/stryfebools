@@ -14,6 +14,7 @@ for (const link of document.querySelectorAll('.listen, .masthead .platform')) {
 }
 
 const hero = document.querySelector('.hero');
+const textTracking = document.querySelector('#crt-tracking');
 const surface = document.querySelector('.scene-surface');
 const canvas = document.querySelector('#world');
 const picture = document.querySelector('.hero-picture');
@@ -240,9 +241,19 @@ function showScene(index, url) {
   dwell = 0;
 }
 
+function setTextTracking(progress) {
+  const scale = progress >= .12 && progress < .28 ? '14'
+    : progress >= .34 && progress < .48 ? '-9'
+    : progress >= .55 && progress < .65 ? '6' : '0';
+  if (textTracking.getAttribute('scale') !== scale) textTracking.setAttribute('scale', scale);
+}
+
 function syncSurface() {
   surface.classList.toggle('interactive', rendererReady && motionOn);
-  if (!motionOn || rendererFailed) hero.classList.remove('is-retuning');
+  if (!motionOn || rendererFailed) {
+    hero.classList.remove('is-retuning');
+    setTextTracking(0);
+  }
   if (!motionOn || rendererFailed) canvas.classList.remove('is-rendering');
 }
 
@@ -386,7 +397,9 @@ function drawFrame(now) {
   gl.bindTexture(gl.TEXTURE_2D, nextEntry.texture);
   gl.uniform2f(uniforms.uResolution, cssWidth, cssHeight);
   gl.uniform1f(uniforms.uTime, clock);
-  gl.uniform1f(uniforms.uTransition, (transition?.elapsed ?? 0) / transitionDuration);
+  const transitionProgress = (transition?.elapsed ?? 0) / transitionDuration;
+  gl.uniform1f(uniforms.uTransition, transitionProgress);
+  setTextTracking(transitionProgress);
   gl.uniform1f(uniforms.uDwell, progress * progress);
   gl.uniform3f(uniforms.uSignalFocus, focusPosition.x, focusPosition.y, staticFocus);
   gl.uniform1f(uniforms.uAspectCurrent, activeEntry.aspect);
