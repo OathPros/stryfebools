@@ -13,8 +13,8 @@
   <title>STRYFEBOOLS — Music</title>
   <link rel="preload" href="assets/fonts/pirata-one.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="icon" href="assets/favicon.png" type="image/png" sizes="64x64">
-  <link rel="stylesheet" href="site.css?v=crt-glass">
-  <script src="site.js?v=crt-glass" defer></script>
+  <link rel="stylesheet" href="site.css?v=crt-overlay">
+  <script src="site.js?v=crt-overlay" defer></script>
   <script src="music.js" defer></script>
 </head>
 <body>
@@ -22,7 +22,6 @@
 
   <main>
     <section class="hero" id="home" aria-labelledby="hero-title">
-      <h1 class="sr-only" id="hero-title">STRYFEBOOLS</h1>
       <div class="scene-surface">
         <picture class="hero-picture" aria-hidden="true">
           <source media="(max-width: 760px)" srcset="assets/scene-3-small.webp">
@@ -32,6 +31,21 @@
       </div>
       <div class="hero-scrim" aria-hidden="true"></div>
 
+      <header class="masthead">
+        <a class="brand" href="#home" aria-label="STRYFEBOOLS home">SB 705</a>
+        <nav aria-label="Main navigation">
+          <a href="#music">Music</a>
+          <a href="#about">About</a>
+        </nav>
+        <a class="platform" href="https://soundcloud.com/stryfebools">SoundCloud <span class="signal-mark" aria-hidden="true"><span></span></span></a>
+      </header>
+
+      <div class="hero-center">
+        <span class="eyebrow hero-genre">INDEPENDENT (BAD)SHIT</span>
+        <h1 id="hero-title">STRYFEBOOLS</h1>
+        <a class="listen" href="#music"><span class="signal-mark" aria-hidden="true"><span></span></span> Listen now</a>
+      </div>
+
       <template id="hero-scenes">
         <span data-full="assets/scene-3.webp" data-small="assets/scene-3-small.webp" data-focus-y=".69" data-zoom="1.10"></span>
         <span data-full="assets/scene-1.webp" data-small="assets/scene-1-small.webp"></span>
@@ -39,15 +53,6 @@
         <span data-full="assets/scene-4.webp" data-small="assets/scene-4-small.webp"></span>
       </template>
     </section>
-
-    <div class="masthead">
-      <a class="brand" href="#home" aria-label="STRYFEBOOLS home">SB 705</a>
-      <nav aria-label="Main navigation">
-        <a href="#music">Music</a>
-        <a href="#about">About</a>
-      </nav>
-      <a class="platform" href="https://soundcloud.com/stryfebools">SoundCloud <span class="signal-mark" aria-hidden="true"><span></span></span></a>
-    </div>
 
     <section class="music paper" id="music" aria-labelledby="music-title">
       <div class="section-wrap">

@@ -1,7 +1,7 @@
 (() => {
 'use strict';
 
-for (const link of document.querySelectorAll('.masthead .platform')) {
+for (const link of document.querySelectorAll('.listen, .masthead .platform')) {
   link.addEventListener('click', event => {
     link.classList.add('signal-revealed');
     if (link.origin === location.origin || event.button !== 0 ||
