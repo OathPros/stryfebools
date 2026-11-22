@@ -268,6 +268,60 @@ footer {
   .hero h1 { font-size: clamp(2rem, 17vw, 8rem); }
 }
 
+.mobile-track { display: none; }
+@media (max-width: 680px) {
+  .soundcloud-player.has-mobile-control { position: relative; }
+  .soundcloud-player.has-mobile-control iframe {
+    position: absolute;
+    inset: .85rem .85rem auto;
+    width: calc(100% - 1.7rem);
+  }
+  .has-mobile-control .mobile-track {
+    position: relative;
+    display: grid;
+    gap: .65rem;
+    min-height: 116px;
+    align-content: center;
+    padding: .75rem;
+    background: #272727;
+  }
+  .mobile-track h4 { margin: 0; font-size: 1rem; }
+  .mobile-track button {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    justify-self: start;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #f7f7f7;
+    font: inherit;
+    cursor: pointer;
+  }
+  .mobile-play-icon {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    color: #141414;
+    background: #ff5500;
+  }
+  .mobile-play-icon::before {
+    content: "";
+    border: .38rem solid transparent;
+    border-left: .63rem solid currentColor;
+    border-right: 0;
+    margin-left: .15rem;
+  }
+  .mobile-track button[aria-pressed="true"] .mobile-play-icon::before {
+    width: .62rem;
+    height: .73rem;
+    border: solid currentColor;
+    border-width: 0 .18rem;
+    margin-left: 0;
+  }
+}
 @media (max-width: 680px) {
   .record { grid-template-columns: 1fr; }
   .cover { width: min(100%, 27rem); }
