@@ -1,0 +1,46 @@
+[
+  {
+    "scene": "CINDER CITY",
+    "artist": "John Martin",
+    "work": "The Destruction of Sodom and Gomorrah",
+    "date": "1852",
+    "source": "https://commons.wikimedia.org/wiki/File:John_Martin_-_Sodom_and_Gomorrah.jpg",
+    "license": "Public Domain Mark 1.0",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e1/John_Martin_-_Sodom_and_Gomorrah.jpg/1280px-John_Martin_-_Sodom_and_Gomorrah.jpg",
+    "aspect": 1.568687309201919,
+    "alt": "John Martin's painting of a city engulfed by fire, with figures escaping through a dark landscape"
+  },
+  {
+    "scene": "FALLEN SPAN",
+    "artist": "J. M. W. Turner",
+    "work": "The Burning of the Houses of Lords and Commons, October 16, 1834",
+    "date": "c. 1835",
+    "source": "https://commons.wikimedia.org/wiki/File:Joseph_Mallord_William_Turner,_English_-_The_Burning_of_the_Houses_of_Lords_and_Commons,_October_16,_1834_-_Google_Art_Project.jpg",
+    "license": "Public Domain Mark 1.0",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c3/Joseph_Mallord_William_Turner%2C_English_-_The_Burning_of_the_Houses_of_Lords_and_Commons%2C_October_16%2C_1834_-_Google_Art_Project.jpg/1280px-Joseph_Mallord_William_Turner%2C_English_-_The_Burning_of_the_Houses_of_Lords_and_Commons%2C_October_16%2C_1834_-_Google_Art_Project.jpg",
+    "aspect": 1.3437025796661608,
+    "alt": "J. M. W. Turner's painting of Parliament burning beside a bridge over the Thames"
+  },
+  {
+    "scene": "THE WITNESS",
+    "artist": "Odilon Redon",
+    "work": "The Vague Glimmer of a Head Suspended in Space",
+    "date": "1891",
+    "source": "https://commons.wikimedia.org/wiki/File:The_vague_glimmer_of_a_head_suspended_in_space_MET_DP824902.jpg",
+    "license": "CC0 1.0 — Metropolitan Museum of Art",
+    "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e4/The_vague_glimmer_of_a_head_suspended_in_space_MET_DP824902.jpg/960px-The_vague_glimmer_of_a_head_suspended_in_space_MET_DP824902.jpg",
+    "aspect": 0.7232756251717505,
+    "alt": "Odilon Redon's eerie charcoal-dark lithograph featuring a disembodied face suspended in darkness"
+  },
+  {
+    "scene": "BLACKOUT",
+    "artist": "Philip James de Loutherbourg",
+    "work": "Coalbrookdale by Night",
+    "date": "1801",
+    "source": "https://commons.wikimedia.org/wiki/File:Philipp_Jakob_Loutherbourg_d._J._-_Coalbrookdale_by_Night_-_WGA13730.jpg",
+    "license": "Public Domain Mark 1.0",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/8/8d/Philipp_Jakob_Loutherbourg_d._J._-_Coalbrookdale_by_Night_-_WGA13730.jpg",
+    "aspect": 1.5675324675324676,
+    "alt": "Philip James de Loutherbourg's oil painting showing coal furnaces lighting up an industrial town at night"
+  }
+]
