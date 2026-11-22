@@ -11,11 +11,11 @@ The hero uses local, responsive WebP images. With WebGL and motion enabled, tele
 ## Update the content
 
 - **Artwork:** Add an entry to the `#hero-scenes` template in `index.html` with `data-full` and `data-small` image paths. The sequence follows the order of the entries. The hero uses the 16:9 desktop and 4:5 portrait editions in `STRYFE_assets`. Keep the opening picture in sync with the first entry and record provenance in `STRYFE_assets/SOURCES_AND_RIGHTS.json`. Optional `data-focus-x` sets the horizontal crop focus from 0 at the left to 1 at the right. Optional `data-focus-y` sets the vertical crop focus from 0 at the bottom to 1 at the top. Use `data-zoom` for an optional hero crop.
-- **Music:** The latest-track list in `index.html` contains a native SoundCloud player and a direct link for each track. When updating it, use the artist’s [SoundCloud tracks page](https://soundcloud.com/stryfebools/tracks) for the release order and [SoundCloud oEmbed](https://soundcloud.com/oembed) for the track IDs. Keep autoplay off. Update the featured cover and its alt text when the artwork changes.
+- **Music:** The catalog in `index.html` uses native SoundCloud embeds for [albums](https://soundcloud.com/stryfebools/albums), [playlists](https://soundcloud.com/stryfebools/sets), and public tracks outside those collections. Use the official [SoundCloud oEmbed endpoint](https://soundcloud.com/oembed) for player URLs. Keep SoundCloud’s track order inside each collection and use its published artwork when available.
 - **Artist information and links:** Update the About and Links sections in `index.html` when the artist provides additional details or platform URLs.
 - **Fonts:** The local Pirata One and Archivo WOFF2 files come from Google Fonts. Their SIL Open Font License files are in `assets/fonts/`.
 
-The five hero illustrations are Harry Clarke works from the supplied `STRYFE_assets` collection. Earlier artwork sources are recorded in `art-sources.json`. The music cover is served by SoundCloud and belongs to its artist or rights holder.
+The five hero illustrations are Harry Clarke works from the supplied `STRYFE_assets` collection. Earlier artwork sources are recorded in `art-sources.json`. Release artwork is served by SoundCloud and belongs to its artist or rights holder.
 
 ## Deploy on GitHub Pages
 

@@ -194,14 +194,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .section-heading { display: flex; gap: 1rem; justify-content: space-between; align-items: end; margin-bottom: clamp(1.5rem, 4vw, 3.5rem); }
 h2 { font-size: clamp(3.6rem, 8vw, 8rem); line-height: .95; }
 .paper { background: var(--paper); color: var(--ink); color-scheme: light; }
-.record { display: grid; grid-template-columns: minmax(12rem, 2fr) 3fr; gap: clamp(1.5rem, 5vw, 5rem); align-items: start; }
-.record.without-cover { grid-template-columns: 1fr; }
-.without-cover .cover { display: none; }
-.cover { background: #1f1f1f; aspect-ratio: 1; }
-.cover img { display: block; width: 100%; height: auto; }
 .track-label { color: var(--graphite); margin-bottom: .7rem; }
 .track-label .signal-mark { color: #555; }
-.tracks { min-width: 0; }
+.soundcloud-group { margin-top: clamp(1.5rem, 4vw, 3rem); }
+.soundcloud-group h3 { margin: 0 0 .85rem; font-size: clamp(1.25rem, 3vw, 2rem); }
 .track-list { display: grid; gap: 1rem; list-style: none; padding: 0; margin: 0; }
 .player { margin-top: 1rem; padding: .85rem; background: #1c1c1c; color: var(--paper); color-scheme: dark; }
 .player :focus-visible { outline-color: #8e8e8e; }
@@ -224,7 +220,16 @@ h2 { font-size: clamp(3.6rem, 8vw, 8rem); line-height: .95; }
 .soundcloud-player {
   margin-top: 0;
   border-inline-start: 3px solid #ff5500;
+  display: grid;
+  grid-template-columns: minmax(7rem, 11rem) minmax(0, 1fr);
+  grid-template-areas: "art title" "art embed" "art direct";
+  align-items: start;
+  gap: .7rem 1rem;
 }
+.release-art { grid-area: art; display: block; width: 100%; height: auto; }
+.release-title { grid-area: title; margin: 0; font-size: 1rem; }
+.soundcloud-player iframe { grid-area: embed; }
+.soundcloud-player .player-link { grid-area: direct; justify-self: start; margin-top: 0; }
 .spotify-player {
   margin-top: clamp(1.5rem, 4vw, 3rem);
   border-inline-start: 3px solid #1ed760;
@@ -268,64 +273,12 @@ footer {
   .hero h1 { font-size: clamp(2rem, 17vw, 8rem); }
 }
 
-.mobile-track { display: none; }
 @media (max-width: 680px) {
-  .soundcloud-player.has-mobile-control { position: relative; }
-  .soundcloud-player.has-mobile-control iframe {
-    position: absolute;
-    inset: .85rem .85rem auto;
-    width: calc(100% - 1.7rem);
+  .soundcloud-player {
+    grid-template-columns: 3.75rem minmax(0, 1fr);
+    grid-template-areas: "art title" "embed embed" "direct direct";
   }
-  .has-mobile-control .mobile-track {
-    position: relative;
-    display: grid;
-    gap: .65rem;
-    min-height: 116px;
-    align-content: center;
-    padding: .75rem;
-    background: #272727;
-  }
-  .mobile-track h4 { margin: 0; font-size: 1rem; }
-  .mobile-track button {
-    display: flex;
-    align-items: center;
-    gap: .7rem;
-    justify-self: start;
-    padding: 0;
-    border: 0;
-    background: none;
-    color: #f7f7f7;
-    font: inherit;
-    cursor: pointer;
-  }
-  .mobile-play-icon {
-    display: grid;
-    place-items: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    color: #141414;
-    background: #ff5500;
-  }
-  .mobile-play-icon::before {
-    content: "";
-    border: .38rem solid transparent;
-    border-left: .63rem solid currentColor;
-    border-right: 0;
-    margin-left: .15rem;
-  }
-  .mobile-track button[aria-pressed="true"] .mobile-play-icon::before {
-    width: .62rem;
-    height: .73rem;
-    border: solid currentColor;
-    border-width: 0 .18rem;
-    margin-left: 0;
-  }
-}
-@media (max-width: 680px) {
-  .record { grid-template-columns: 1fr; }
-  .cover { width: min(100%, 27rem); }
-  .soundcloud-player iframe { height: 116px; }
+  .soundcloud-player .release-title { align-self: center; }
   .soundcloud-player .player-link { width: 100%; justify-content: center; text-align: center; }
   .section-heading { flex-wrap: wrap; align-items: start; }
 }
@@ -342,8 +295,6 @@ footer {
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
 }
-
-.cover img { filter: grayscale(1); }
 
 .signal-mark {
   position: relative;
