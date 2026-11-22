@@ -1,6 +1,6 @@
 # STRYFEBOOLS
 
-Artist website with a cinematic homepage, SoundCloud listening, and live show announcements. The site is static HTML, CSS, and JavaScript.
+Artist website with a cinematic homepage, and embedded SoundCloud and Spotify players. The site is static HTML, CSS, and JavaScript.
 
 ## Develop locally
 
@@ -11,7 +11,6 @@ The hero uses local, responsive WebP images. With WebGL and motion enabled, keep
 ## Update the content
 
 - **Artwork:** Add an entry to the `#hero-scenes` template in `index.html` with `data-full` and `data-small` image paths. The sequence follows the order of the entries. Keep the opening picture in sync with the first entry and record provenance in `art-sources.json`. Optional `data-focus-y` sets the vertical crop focus from 0 at the bottom to 1 at the top. Use `data-zoom` for an optional hero crop.
-- **Live shows:** Replace the empty-state paragraph in `#shows` with a list of confirmed dates. Use a `<time datetime="YYYY-MM-DD">` element for each date and include the venue, city, and official ticket link if available.
 - **Music:** The latest-track list in `index.html` contains a native SoundCloud player and a direct link for each track. When updating it, use the artist’s [SoundCloud tracks page](https://soundcloud.com/stryfebools/tracks) for the release order and [SoundCloud oEmbed](https://soundcloud.com/oembed) for the track IDs. Keep autoplay off. Update the featured cover and its alt text when the artwork changes.
 - **Artist information and links:** Update the About and Links sections in `index.html` when the artist provides additional details or platform URLs.
 - **Fonts:** The local Pirata One and Archivo WOFF2 files come from Google Fonts. Their SIL Open Font License files are in `assets/fonts/`.

@@ -112,7 +112,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .listen:hover .signal-mark { color: var(--paper); }
 
 .section-wrap { width: min(100%, 104rem); margin-inline: auto; padding: clamp(3.6rem, 8vw, 8rem) var(--gutter); }
-.section-heading { display: flex; gap: 1rem; justify-content: space-between; align-items: end; padding-bottom: 1.1rem; margin-bottom: clamp(1.5rem, 4vw, 3.5rem); border-bottom: 1px solid currentColor; }
+.section-heading { display: flex; gap: 1rem; justify-content: space-between; align-items: end; margin-bottom: clamp(1.5rem, 4vw, 3.5rem); }
 h2 { font-size: clamp(3.6rem, 8vw, 8rem); line-height: .95; }
 .line-link { display: inline-block; font-size: .82rem; font-weight: 700; padding-block: .65rem; }
 .line-link span { margin-left: .35em; }
@@ -142,9 +142,6 @@ h2 { font-size: clamp(3.6rem, 8vw, 8rem); line-height: .95; }
   color: #1ed760;
 }
 
-.shows { background: #161616; }
-.shows .section-heading, .about .section-heading { border-color: #6b6b6b; }
-.shows p { color: var(--ash); }
 
 .about { background: #1d1d1d; }
 .artist-bio { font-size: clamp(1.125rem, 2.25vw, 2.1rem); line-height: 1.45; }
@@ -170,7 +167,6 @@ footer {
   gap: 1rem;
   padding: 1rem var(--gutter);
   color: var(--ash);
-  border-top: 1px solid #6b6b6b;
 }
 .footer-brand { font-size: 1.75rem; text-decoration: none; }
 
