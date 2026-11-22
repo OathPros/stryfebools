@@ -244,6 +244,13 @@ h2 { font-size: clamp(3.6rem, 8vw, 8rem); line-height: .95; }
 .release-art { display: block; object-fit: cover; }
 .release-title { font-size: .95rem; font-weight: 700; overflow-wrap: anywhere; }
 .release-player { padding: .35rem .7rem .7rem; }
+/* SoundCloud's light widget has no dark theme. The complementary widget color
+   becomes orange when the iframe is inverted. */
+.soundcloud-player iframe {
+  filter: invert(1);
+  background: #ddd;
+}
+
 .spotify-player {
   margin-top: clamp(1.5rem, 4vw, 3rem);
   border-inline-start: 3px solid #1ed760;
