@@ -147,7 +147,8 @@ h2 { font-size: clamp(3.6rem, 8vw, 8rem); line-height: .95; }
 .shows p { color: var(--ash); }
 
 .about { background: #1d1d1d; }
-.artist-intro { font-size: clamp(1.5rem, 4vw, 4rem); line-height: 1.12; max-width: 21ch; }
+.artist-bio { font-size: clamp(1.125rem, 2.25vw, 2.1rem); line-height: 1.45; }
+.artist-bio p + p { margin-top: 1em; }
 .links .section-wrap { display: flex; justify-content: space-between; align-items: end; gap: 1rem; }
 .links h2 { font-size: clamp(2.65rem, 5vw, 5rem); }
 footer {
