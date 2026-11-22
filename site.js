@@ -108,7 +108,10 @@ void main() {
   float contact = exp(-dot(separation, separation) * 46.) * uSignalFocus.z;
   tear += (hash(vec2(row + 19., field)) - .5) * contact * .048;
   vec2 glassOffset = uv - .5;
-  vec2 signal = .5 + glassOffset * (1. + .284 * dot(glassOffset, glassOffset)) + vec2(tear, 0.);
+  // Overscan keeps the curved raster inside the source instead of stretching edge pixels.
+  vec2 signal = .5 + glassOffset * (1. + .22 * dot(glassOffset, glassOffset)) * .88;
+  float sideRoom = min(signal.x, 1. - signal.x);
+  signal.x += tear * smoothstep(0., .13, sideRoom);
 
   vec2 currentUV = cover(signal, uAspectCurrent, uFocusCurrent, uZoomCurrent);
   vec2 nextUV = cover(signal, uAspectNext, uFocusNext, uZoomNext);
@@ -239,6 +242,7 @@ function showScene(index, url) {
 
 function syncSurface() {
   surface.classList.toggle('interactive', rendererReady && motionOn);
+  if (!motionOn || rendererFailed) hero.classList.remove('is-retuning');
   if (!motionOn || rendererFailed) canvas.classList.remove('is-rendering');
 }
 
@@ -393,6 +397,7 @@ function drawFrame(now) {
   gl.uniform1f(uniforms.uZoomNext, scenes[nextIndex].zoom);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   canvas.classList.add('is-rendering');
+  hero.classList.toggle('is-retuning', Boolean(transition));
   scheduleFrame();
 }
 
