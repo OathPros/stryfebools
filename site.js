@@ -1,7 +1,7 @@
 (() => {
 'use strict';
 
-for (const link of document.querySelectorAll('.listen, .masthead .platform')) {
+for (const link of document.querySelectorAll('.masthead .platform')) {
   link.addEventListener('click', event => {
     link.classList.add('signal-revealed');
     if (link.origin === location.origin || event.button !== 0 ||
@@ -107,7 +107,8 @@ void main() {
   vec2 separation = (uv - uSignalFocus.xy) * vec2(aspect, 1.);
   float contact = exp(-dot(separation, separation) * 46.) * uSignalFocus.z;
   tear += (hash(vec2(row + 19., field)) - .5) * contact * .048;
-  vec2 signal = uv + vec2(tear, 0.);
+  vec2 glassOffset = uv - .5;
+  vec2 signal = .5 + glassOffset * (1. + .284 * dot(glassOffset, glassOffset)) + vec2(tear, 0.);
 
   vec2 currentUV = cover(signal, uAspectCurrent, uFocusCurrent, uZoomCurrent);
   vec2 nextUV = cover(signal, uAspectNext, uFocusNext, uZoomNext);
@@ -123,7 +124,9 @@ void main() {
   float interference = .43 + (snow - .5) * .55 + (streak - .5) * .13;
   float scanline = .94 + .06 * cos(uv.y * 290. * 6.283185);
   float noiseMix = clamp(tuning * .90 + tracking * tuning * .16 + contact * .81 + buildup * .30, 0., .97);
-  float gray = mix(picture, interference, noiseMix) * scanline;
+  float grain = hash(floor(gl_FragCoord.xy) + vec2(field, 0.)) - .5;
+  float phosphor = .96 + .04 * cos(gl_FragCoord.x * 2.094395);
+  float gray = mix(picture, interference, noiseMix) * scanline * phosphor + grain * .068;
   gray *= 1. - .40 * smoothstep(.18, .88, length(uv - .5));
   gl_FragColor = vec4(vec3(gray), 1.);
 }`;
