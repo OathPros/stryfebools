@@ -1,54 +1,24 @@
-# STRYFEBOOLS — existing artists' artwork edition
+# STRYFEBOOLS
 
-A cinematic, interactive music homepage prototype. The artwork was **not AI-generated**. Each scene uses an existing artwork by a named human artist. The smoke, cursor smudge, and image transitions are procedural WebGL effects applied to those images.
+Artist website with a cinematic homepage, SoundCloud listening, and a curated archive of historical artwork. The site is static HTML, CSS, and JavaScript.
 
-## Included art
+## Develop locally
 
-| Scene | Artist | Original work | Licensing |
-|---|---|---|---|
-| Cinder City | John Martin | *The Destruction of Sodom and Gomorrah* (1852) | Public Domain Mark 1.0 |
-| Fallen Span | J. M. W. Turner | *The Burning of the Houses of Lords and Commons, October 16, 1834* (c. 1835) | Public Domain Mark 1.0 |
-| The Witness | Odilon Redon | *The Vague Glimmer of a Head Suspended in Space* (1891) | CC0 1.0, Metropolitan Museum of Art |
-| Blackout | Philip James de Loutherbourg | *Coalbrookdale by Night* (1801) | Public Domain Mark 1.0 |
+Run `python3 -m http.server 8080` from the checkout, then open `http://localhost:8080`. A local HTTP server gives the artwork and shader textures the same origin.
 
-**Source pages, direct image URLs and attribution are recorded in `art-sources.json`**. The full credits also appear on the website. The webpage uses public-domain reproduction imagery provided on Wikimedia Commons.
+The hero uses local, responsive WebP images. With WebGL and motion enabled, the surface reacts to pointer movement. Dragging erodes the current scene and reveals the next artwork. On touchscreens, swipe sideways over the artwork. Vertical swipes scroll the page. **Next artwork** advances the scene by button or keyboard. **Motion** pauses the effect. Reduced-motion preferences start the hero in its still-image mode.
 
-## Important: hosted images versus local copies
+## Update the content
 
-The site **currently loads the artwork directly from Wikimedia Commons**. This means an internet connection is required. The project ZIP does not contain any artwork image files; it only contains references and credits. 
+- **Artwork:** Add a figure to the archive in `index.html` with `data-scene`, an image, a responsive `srcset` with the small variant first, a heading, attribution, and a `.view-scene` button. The sequence follows the order of the figures. Keep the opening picture and initial caption in sync with the first figure. Set the image's intrinsic dimensions and alt text. Keep the license, original source URL, and local files in `art-sources.json`. Optional `data-focus-y` sets the vertical crop focus for panoramic screens, from 0 at the bottom to 1 at the top. Use `data-zoom` for an optional hero-only crop.
+- **Music:** Track rows in `index.html` pair an official SoundCloud track ID in `data-track` with the public track permalink. These come from SoundCloud's [oEmbed endpoint](https://soundcloud.com/oembed). Update the featured cover and its alt text with a verified artist image when the selection changes. Each track opens a single on-demand SoundCloud player. Direct track links work with JavaScript disabled and when the player is unavailable.
+- **Artist information and links:** Update the About and Links sections in `index.html` when the artist provides additional details or platform URLs.
+- **Fonts:** The local Pirata One and Archivo WOFF2 files come from Google Fonts. Their SIL Open Font License files are in `assets/fonts/`.
 
-To obtain an independent website that doesn't depend on Wikimedia serving the images, run this command on your computer from the project root:
+The four historical works are the sources recorded by this project's original checkout. Local WebP files are resized copies of those reproductions. The music cover is served by SoundCloud and belongs to its artist or rights holder.
 
-```bash
-python download_artworks.py
-```
+## Deploy on GitHub Pages
 
-The script downloads the original sourced files (without editing them) and replaces the external image URLs with local asset paths. All artwork credits and source links are retained. You should review Wikimedia Commons' reuse documentation for your jurisdiction and respect any relevant rights notices before publication.
+In **Settings → Pages**, set **Source** to **GitHub Actions**. The Pages workflow runs on pushes to `main` and can also be run manually from the Actions tab. No build or dependency installation is required. Relative asset paths work at both the domain root and a repository subpath. The social preview uses the credited, publicly hosted reproduction of the opening artwork.
 
-## Launch
-
-This is a plain HTML, CSS, JavaScript project with no build process.
-
-For local testing:
-
-```bash
-python -m http.server 8080
-```
-
-Open `http://localhost:8080` in a browser.
-
-## GitHub Pages
-
-1. Upload `index.html`, `assets/`, `art-sources.json` and the remaining source files to a GitHub repo.
-2. Visit **Settings → Pages**, choose **Deploy from a branch**, `main` and `/ (root)`.
-3. The homepage will load from your repo's Pages URL.
-4. For reliability, run `download_artworks.py` and commit the downloaded artwork files before publishing. This prevents Wikimedia URL/CORS/dependency issues.
-
-## Implementation notes
-
-- WebGL is used for animated turbulence, trailing pointer distortion, simulated smoke, an accumulation mask and organic reveal/bleed between scenes.
-- The site's scripted Rorschach effect is mathematical image distortion, not AI-generated artwork.
-- On unsupported devices, the site shows a static-image fallback with manual scene switching.
-- The artist biographies and music track names have **not** been invented. The listening section points to `https://soundcloud.com/stryfebools`.
-- The portrait Redon artwork is positioned and mirrored **in the animated hero presentation**, while the artwork credit/source link preserves the original's identity and source file.
-- If the artwork images are blocked by an image host or CORS policy, use the local download script to make the site self-contained.
+SoundCloud audio and cover art require access to SoundCloud. The archive, type, and hero use files in this checkout.
