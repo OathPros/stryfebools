@@ -6,7 +6,7 @@ Artist website with a cinematic homepage, SoundCloud listening, and a curated ar
 
 Run `python3 -m http.server 8080` from the checkout, then open `http://localhost:8080`. A local HTTP server gives the artwork and shader textures the same origin.
 
-The hero uses local, responsive WebP images. With WebGL and motion enabled, moving the pointer across the surface erodes the current scene and reveals the next artwork. On touchscreens, swipe sideways over the artwork. Vertical swipes scroll the page. **Next artwork** advances the scene by button or keyboard. **Motion** pauses the effect. Reduced-motion preferences start the hero in its still-image mode.
+The hero uses local, responsive WebP images. With WebGL and motion enabled, the artwork changes through monochrome television snow, scanlines, and a rolling tracking band. Hover adds light interference. Press or drag to concentrate the snow under the pointer or fingertip. Vertical swipes scroll the page. **Next artwork** advances the scene by button or keyboard. **Motion** pauses the effect. Reduced-motion preferences start the hero in its still-image mode.
 
 ## Update the content
 

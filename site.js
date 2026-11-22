@@ -14,8 +14,6 @@ const controls = document.querySelector('#scene-actions');
 const motionButton = document.querySelector('#motion-button');
 const motionState = document.querySelector('#motion-state');
 const nextButton = document.querySelector('#next-button');
-const progress = document.querySelector('#smudge-progress');
-const progressPanel = document.querySelector('#smudge-panel');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const smallScreen = matchMedia('(max-width: 760px)');
 const scenes = Array.from(document.querySelectorAll('[data-scene]'), plate => {
@@ -34,16 +32,8 @@ const scenes = Array.from(document.querySelectorAll('[data-scene]'), plate => {
 
 if (scenes.length < 2) return;
 
-const mask = document.createElement('canvas');
-mask.width = 320;
-mask.height = 192;
-const paint = mask.getContext('2d');
-const gridWidth = 40;
-const gridHeight = 24;
-const visited = new Uint8Array(gridWidth * gridHeight);
-const packedTrail = new Float32Array(18);
-const damageThreshold = visited.length * .23;
-let gl, program, maskTexture;
+const transitionDuration = 1.65;
+let gl, program;
 const uniforms = {};
 let motionOn = !reducedMotion.matches;
 let visible = true;
@@ -53,10 +43,10 @@ let current = 0;
 let requested = 0;
 let transition;
 let requestVersion = 0;
-let lastPoint;
-let trail = [];
-let coverage = 0;
-let maskDirty = true;
+let pointer;
+let heldPointer;
+let staticFocus = 0;
+let focusPosition = { x: .5, y: .5 };
 let frame = 0;
 let lastFrame = 0;
 let clock = 0;
@@ -73,22 +63,22 @@ const frag = `precision highp float;
 varying vec2 vUv;
 uniform sampler2D uCurrent;
 uniform sampler2D uNext;
-uniform sampler2D uMask;
 uniform vec2 uResolution;
 uniform float uTime;
 uniform float uTransition;
-uniform float uProgress;
 uniform float uAspectCurrent;
 uniform float uAspectNext;
 uniform float uFocusCurrent;
 uniform float uFocusNext;
 uniform float uZoomCurrent;
 uniform float uZoomNext;
-uniform vec3 uTrail[6];
-uniform float uTrailCount;
-float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
-float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);}
-float fbm(vec2 p){float v=0.,amp=.53;for(int i=0;i<4;i++){v+=amp*noise(p);p=mat2(1.61,-1.15,1.15,1.61)*p;amp*=.5;}return v;}
+uniform vec3 uSignalFocus;
+float hash(vec2 point) {
+  vec3 p = fract(vec3(point.xyx) * .1031);
+  p += dot(p, p.yzx + 33.33);
+  return fract((p.x + p.y) * p.z);
+}
+
 vec2 cover(vec2 uv, float pictureAspect, float focusY, float zoom) {
   vec2 anchor = vec2(.5, focusY);
   uv = anchor + (uv - anchor) / zoom;
@@ -101,43 +91,39 @@ vec2 cover(vec2 uv, float pictureAspect, float focusY, float zoom) {
   }
   return uv;
 }
-void main(){
- vec2 uv=vUv;
- float t=uTime*.18;
- float a=fbm(uv*3.2+vec2(t*.25,-t*.17));
- float b=fbm(uv*6.6+vec2(-t*.32,t*.11));
- vec2 warp=vec2(a-.48,b-.48)*.024;
- float interaction=0.;
- for(int i=0;i<6;i++){
-  if(float(i)<uTrailCount){vec3 pt=uTrail[i];vec2 d=uv-pt.xy;float v=exp(-dot(d,d)*71.)*pt.z;interaction+=v;warp+=vec2(-d.y,d.x)*v*.82 + d*v*.09;}
- }
- float turbulence=fbm(uv*8.3+warp*12.0+vec2(t*.19,-t*.42));
- warp+=(vec2(turbulence-.5,a-.5)*(.011+.022*min(1.0,interaction)));
- float smokeField=fbm(uv*vec2(5.0,3.5)+vec2(a*.9,-t*.23)+warp*12.);
- float ghostField=fbm(uv*vec2(6.8,4.4)-vec2(t*.10,t*.04)+warp*10.);
- vec2 photo=cover(uv+warp,uAspectCurrent,uFocusCurrent,uZoomCurrent);
- vec2 photoNext=cover(uv+warp,uAspectNext,uFocusNext,uZoomNext);
- vec3 colA=texture2D(uCurrent,clamp(photo,0.001,.999)).rgb;
- vec3 colB=texture2D(uNext,clamp(photoNext+warp*.11,0.001,.999)).rgb;
- float smear=texture2D(uMask,uv).r;
- float contamination=smear + smokeField*(.06+.12*uProgress) + ghostField*.045*uProgress;
- float reveal=smoothstep(.14,.92,contamination);
+void main() {
+  vec2 uv = vUv;
+  float row = floor(uv.y * 290.);
+  float field = floor(uTime * 15.);
+  float aspect = uResolution.x / uResolution.y;
 
- // The advancing threshold follows the smoke and begins in damaged areas.
- float edge = clamp(smokeField * .7 + ghostField * .3 + smear * .28, 0., 1.);
- float burn = smoothstep(.37, .63, edge + uTransition * 1.48 - .74);
- reveal = max(reveal, burn);
- float luminance = dot(mix(colA,colB,reveal), vec3(.2126,.7152,.0722));
- float smoky=smoothstep(.44,.78,smokeField)*.31;
- luminance=mix(luminance,.095,smoky);
- float burnEdge=smoothstep(.08,.25,smear)-smoothstep(.56,.86,smear);
- luminance+=max(0.,burnEdge)*(.048+.12*uProgress)*(1.-uTransition);
- luminance*=.89;
- float vignette=1.-.52*smoothstep(.15,.89,length((uv-.5)*vec2(1.0,.86)));
- luminance*=vignette;
- float grain=(hash(floor(gl_FragCoord.xy*.68)+vec2(floor(uTime*4.),floor(uTime*3.)))-.5)*.034;
- luminance+=grain;
- gl_FragColor=vec4(vec3(luminance),1.);
+  // The envelope peaks between pictures while a tracking band rolls over the frame.
+  float tuning = smoothstep(0., .42, uTransition) * (1. - smoothstep(.56, 1., uTransition));
+  float roll = 1.18 - uTransition * 1.36;
+  float tracking = 1. - smoothstep(.012, .115, abs(uv.y - roll));
+  float tear = (hash(vec2(row, field)) - .5) * (tuning * .012 + tracking * tuning * .064);
+  vec2 separation = (uv - uSignalFocus.xy) * vec2(aspect, 1.);
+  float contact = exp(-dot(separation, separation) * 46.) * uSignalFocus.z;
+  tear += (hash(vec2(row + 19., field)) - .5) * contact * .048;
+  vec2 signal = uv + vec2(tear, 0.);
+
+  vec2 currentUV = cover(signal, uAspectCurrent, uFocusCurrent, uZoomCurrent);
+  vec2 nextUV = cover(signal, uAspectNext, uFocusNext, uZoomNext);
+  vec3 currentArt = texture2D(uCurrent, clamp(currentUV, 0., 1.)).rgb;
+  vec3 nextArt = texture2D(uNext, clamp(nextUV, 0., 1.)).rgb;
+  float retune = smoothstep(.44, .59, uTransition + (hash(vec2(row, field)) - .5) * tuning * .11);
+  float picture = dot(mix(currentArt, nextArt, retune), vec3(.2126, .7152, .0722)) * .89;
+
+  vec2 cell = floor(uv * vec2(310. * aspect, 310.));
+  float snow = hash(cell + vec2(field * 17., field * 11.));
+  float streak = hash(vec2(floor(cell.x / 6.), cell.y) + vec2(field, field * 3.));
+  // Moderate contrast and a steady mean keep the moving snow from becoming a strobe.
+  float interference = .43 + (snow - .5) * .55 + (streak - .5) * .13;
+  float scanline = .94 + .06 * cos(uv.y * 290. * 6.283185);
+  float noiseMix = clamp(tuning * .90 + tracking * tuning * .16 + contact * .81, 0., .97);
+  float gray = mix(picture, interference, noiseMix) * scanline;
+  gray *= 1. - .40 * smoothstep(.18, .88, length(uv - .5));
+  gl_FragColor = vec4(vec3(gray), 1.);
 }`;
 
 
@@ -183,7 +169,7 @@ function allocateTexture() {
 }
 
 function initRenderer() {
-  if (!paint || rendererFailed) return false;
+  if (rendererFailed) return false;
   if (rendererReady) return true;
 
   try {
@@ -212,18 +198,15 @@ function initRenderer() {
     gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
 
     for (const key of [
-      'uCurrent', 'uNext', 'uMask', 'uResolution', 'uTime', 'uTransition', 'uProgress',
-      'uTrail[0]', 'uTrailCount', 'uAspectCurrent', 'uAspectNext', 'uFocusCurrent', 'uFocusNext', 'uZoomCurrent', 'uZoomNext'
+      'uCurrent', 'uNext', 'uResolution', 'uTime', 'uTransition', 'uSignalFocus',
+      'uAspectCurrent', 'uAspectNext', 'uFocusCurrent', 'uFocusNext', 'uZoomCurrent', 'uZoomNext'
     ]) {
       uniforms[key] = gl.getUniformLocation(program, key);
     }
     gl.uniform1i(uniforms.uCurrent, 0);
     gl.uniform1i(uniforms.uNext, 1);
-    gl.uniform1i(uniforms.uMask, 2);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
-    gl.activeTexture(gl.TEXTURE2);
-    maskTexture = allocateTexture();
     rendererReady = true;
     return true;
   } catch {
@@ -243,18 +226,6 @@ function uploadScene(index, url, image) {
   return entry;
 }
 
-function clearDamage() {
-  lastPoint = undefined;
-  trail = [];
-  visited.fill(0);
-  coverage = 0;
-  progress.value = 0;
-  if (!paint) return;
-  paint.fillStyle = '#000';
-  paint.fillRect(0, 0, mask.width, mask.height);
-  maskDirty = true;
-}
-
 function showScene(index, url) {
   const scene = scenes[index];
   current = index;
@@ -267,7 +238,6 @@ function showScene(index, url) {
   captionTitle.textContent = scene.title;
   sceneTime = 0;
   hold = sceneHold();
-  clearDamage();
 }
 
 function updateControls() {
@@ -275,7 +245,6 @@ function updateControls() {
   motionButton.setAttribute('aria-pressed', String(motionOn));
   motionState.textContent = motionOn ? 'on' : 'off';
   surface.classList.toggle('interactive', rendererReady && motionOn);
-  progressPanel.hidden = !rendererReady || !motionOn;
   if (!motionOn || rendererFailed) canvas.classList.remove('is-rendering');
 }
 
@@ -308,13 +277,10 @@ async function requestScene(index, animate = true) {
     transition = undefined;
     sceneTime = 0;
     captionTitle.textContent = `${scenes[current].title} · Requested artwork unavailable`;
-    clearDamage();
   }
 }
 
 let activeEntry;
-let followingEntry;
-let followingIndex;
 let preloadVersion = 0;
 
 async function prepareTextures() {
@@ -330,17 +296,10 @@ async function prepareTextures() {
       return;
     }
     activeEntry = uploadScene(index, url, image);
-    followingIndex = (index + 1) % scenes.length;
-    followingEntry = undefined;
     updateControls();
     scheduleFrame();
 
-    const upcoming = scenes[followingIndex];
-    const nextUrl = variant(upcoming);
-    const nextImage = await loadScene(upcoming, nextUrl);
-    if (version === preloadVersion && rendererReady) {
-      followingEntry = uploadScene(followingIndex, nextUrl, nextImage);
-    }
+    await loadScene(scenes[(index + 1) % scenes.length]);
   } catch {
     // The current illustration remains visible. Manual navigation can retry.
   }
@@ -355,55 +314,29 @@ function pointOnSurface(event) {
   };
 }
 
-function stamp(point) {
-  const x = point.x * mask.width;
-  const y = (1 - point.y) * mask.height;
-  const radius = mask.width * .085;
-  const gradient = paint.createRadialGradient(x, y, 0, x, y, radius);
-  gradient.addColorStop(0, 'rgba(255,255,255,.65)');
-  gradient.addColorStop(.45, 'rgba(255,255,255,.26)');
-  gradient.addColorStop(1, 'rgba(255,255,255,0)');
-  paint.fillStyle = gradient;
-  paint.fillRect(x - radius, y - radius, radius * 2, radius * 2);
-  maskDirty = true;
-
-  const column = Math.floor(point.x * gridWidth);
-  const row = Math.floor((1 - point.y) * (gridHeight - 1));
-  for (let j = Math.max(0, row - 2); j <= Math.min(gridHeight - 1, row + 2); j++) {
-    for (let i = Math.max(0, column - 3); i <= Math.min(gridWidth - 1, column + 3); i++) {
-      const cell = j * gridWidth + i;
-      if (visited[cell]) continue;
-      visited[cell] = 1;
-      coverage++;
-    }
-  }
-  progress.value = Math.min(100, coverage / damageThreshold * 100);
+function moveStaticFocus(event) {
+  if (!motionOn || !rendererReady || !event.isPrimary) return;
+  pointer = pointOnSurface(event);
 }
 
-surface.addEventListener('pointermove', event => {
-  if (!motionOn || !rendererReady || !event.isPrimary || requested !== current) return;
-  const point = pointOnSurface(event);
-  const from = lastPoint ?? point;
-  const distance = Math.hypot(point.x - from.x, point.y - from.y);
-  if (lastPoint && distance < .009) return;
-
-  sceneTime = 0;
-  trail.unshift({ ...point, strength: 1.25 });
-  trail.length = Math.min(trail.length, 6);
-  const steps = Math.max(1, Math.ceil(distance / .025));
-  for (let i = 1; i <= steps; i++) {
-    stamp({
-      x: from.x + (point.x - from.x) * i / steps,
-      y: from.y + (point.y - from.y) * i / steps
-    });
-  }
-  lastPoint = point;
-  if (coverage >= damageThreshold) requestScene((current + 1) % scenes.length);
+surface.addEventListener('pointermove', moveStaticFocus);
+surface.addEventListener('pointerdown', event => {
+  if (!motionOn || !rendererReady || !event.isPrimary || event.button !== 0) return;
+  moveStaticFocus(event);
+  heldPointer = event.pointerId;
+  surface.setPointerCapture(event.pointerId);
 });
 
-for (const eventName of ['pointerleave', 'pointerup', 'pointercancel']) {
-  surface.addEventListener(eventName, () => { lastPoint = undefined; });
+function releaseStaticFocus(event) {
+  if (event.pointerId !== heldPointer) return;
+  heldPointer = undefined;
+  if (event.pointerType !== 'mouse') pointer = undefined;
 }
+
+for (const eventName of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+  surface.addEventListener(eventName, releaseStaticFocus);
+}
+surface.addEventListener('pointerleave', () => { pointer = undefined; });
 
 function resize() {
   cssWidth = Math.max(1, surface.clientWidth);
@@ -435,11 +368,10 @@ function drawFrame(now) {
   sceneTime += delta;
   if (transition) {
     transition.elapsed += delta;
-    if (transition.elapsed >= 1.65) {
+    if (transition.elapsed >= transitionDuration) {
       const { index, url, entry } = transition;
       transition = undefined;
       activeEntry = entry;
-      followingEntry = undefined;
       showScene(index, url);
       prepareTextures();
     }
@@ -447,38 +379,27 @@ function drawFrame(now) {
     requestScene((current + 1) % scenes.length);
   }
 
-  for (const point of trail) point.strength *= Math.exp(-delta * 3.2);
-  trail = trail.filter(point => point.strength > .025);
-  for (const [index, point] of trail.entries()) {
-    packedTrail.set([point.x, point.y, point.strength], index * 3);
-  }
+  const targetFocus = pointer ? (heldPointer === undefined ? .24 : 1) : 0;
+  staticFocus += (targetFocus - staticFocus) * (1. - Math.exp(-delta * 10));
+  if (pointer) focusPosition = pointer;
 
-  const nextIndex = transition?.index ?? (followingEntry ? followingIndex : current);
-  const nextEntry = transition?.entry ?? followingEntry ?? activeEntry;
+  const nextIndex = transition?.index ?? current;
+  const nextEntry = transition?.entry ?? activeEntry;
   gl.viewport(0, 0, canvas.width, canvas.height);
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, activeEntry.texture);
   gl.activeTexture(gl.TEXTURE1);
   gl.bindTexture(gl.TEXTURE_2D, nextEntry.texture);
-  gl.activeTexture(gl.TEXTURE2);
-  gl.bindTexture(gl.TEXTURE_2D, maskTexture);
-  if (maskDirty) {
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, mask);
-    maskDirty = false;
-  }
-
   gl.uniform2f(uniforms.uResolution, cssWidth, cssHeight);
   gl.uniform1f(uniforms.uTime, clock);
-  gl.uniform1f(uniforms.uTransition, (transition?.elapsed ?? 0) / 1.65);
-  gl.uniform1f(uniforms.uProgress, Math.min(1, coverage / damageThreshold));
+  gl.uniform1f(uniforms.uTransition, (transition?.elapsed ?? 0) / transitionDuration);
+  gl.uniform3f(uniforms.uSignalFocus, focusPosition.x, focusPosition.y, staticFocus);
   gl.uniform1f(uniforms.uAspectCurrent, activeEntry.aspect);
   gl.uniform1f(uniforms.uAspectNext, nextEntry.aspect);
   gl.uniform1f(uniforms.uFocusCurrent, scenes[current].focusY);
   gl.uniform1f(uniforms.uFocusNext, scenes[nextIndex].focusY);
   gl.uniform1f(uniforms.uZoomCurrent, scenes[current].zoom);
   gl.uniform1f(uniforms.uZoomNext, scenes[nextIndex].zoom);
-  gl.uniform3fv(uniforms['uTrail[0]'], packedTrail);
-  gl.uniform1f(uniforms.uTrailCount, trail.length);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   canvas.classList.add('is-rendering');
   scheduleFrame();
@@ -491,7 +412,9 @@ function setMotion(enabled) {
     prepareTextures();
   } else {
     if (requested !== current) requestScene(requested, false);
-    clearDamage();
+    pointer = undefined;
+    heldPointer = undefined;
+    staticFocus = 0;
   }
   updateControls();
 }
@@ -535,7 +458,6 @@ document.addEventListener('visibilitychange', () => {
 
 controls.hidden = false;
 resize();
-clearDamage();
 updateControls();
 if (motionOn) prepareTextures();
 })();
