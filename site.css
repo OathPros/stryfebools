@@ -149,8 +149,20 @@ h2 { font-size: clamp(3.6rem, 8vw, 8rem); line-height: .95; }
 .about { background: #1d1d1d; }
 .artist-bio { font-size: clamp(1.125rem, 2.25vw, 2.1rem); line-height: 1.45; }
 .artist-bio p + p { margin-top: 1em; }
-.links .section-wrap { display: flex; justify-content: space-between; align-items: end; gap: 1rem; }
-.links h2 { font-size: clamp(2.65rem, 5vw, 5rem); }
+.links .section-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(.75rem, 3vw, 2rem);
+}
+.social-link {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border: 1px solid transparent;
+}
+.social-link:hover { border-color: #777; }
 footer {
   display: flex;
   justify-content: space-between;
@@ -170,7 +182,7 @@ footer {
 @media (max-width: 680px) {
   .record { grid-template-columns: 1fr; }
   .cover { width: min(100%, 27rem); }
-  .section-heading, .links .section-wrap { flex-wrap: wrap; align-items: start; }
+  .section-heading { flex-wrap: wrap; align-items: start; }
 }
 
 @media (max-width: 420px) {
