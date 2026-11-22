@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#151211">
+  <meta name="theme-color" content="#121212">
   <meta name="description" content="Listen to STRYFEBOOLS, an alternative dark hip-hop project, and explore its interactive visual archive.">
   <meta property="og:type" content="website">
   <meta property="og:title" content="STRYFEBOOLS">
   <meta property="og:description" content="Alternative dark hip-hop. Listen to STRYFEBOOLS and explore the visual archive.">
-  <meta property="og:image" content="https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e1/John_Martin_-_Sodom_and_Gomorrah.jpg/1280px-John_Martin_-_Sodom_and_Gomorrah.jpg">
+  <meta property="og:image" content="https://lukegagliardi.com/stryfebools/assets/social-preview.jpg">
   <meta name="twitter:card" content="summary_large_image">
   <title>STRYFEBOOLS — Music &amp; Visual Archive</title>
   <link rel="preload" href="assets/fonts/pirata-one.woff2" as="font" type="font/woff2" crossorigin>
@@ -53,7 +53,7 @@
           <span id="scene-title">The Destruction of Sodom and Gomorrah</span>
         </div>
         <div class="interaction" hidden id="smudge-panel">
-          <span>Drag across the image</span>
+          <span>Move across the image</span>
           <progress id="smudge-progress" max="100" value="0" aria-label="Reveal the next artwork"></progress>
         </div>
         <div class="scene-actions" id="scene-actions" hidden>
@@ -78,7 +78,7 @@
             <div class="eyebrow track-label">Selected tracks</div>
             <ol class="track-list">
               <li class="track">
-                <button class="queue" type="button" data-track="2358967973" aria-label="Load Leeching in player" aria-controls="player" aria-pressed="false" hidden><span class="play-icon" aria-hidden="true"></span></button>
+                <button class="queue" type="button" data-track="2358967973" aria-label="Load Leeching in player" aria-controls="player" aria-pressed="true" hidden><span class="play-icon" aria-hidden="true"></span></button>
                 <span class="track-title">Leeching</span>
                 <a class="track-external" href="https://soundcloud.com/stryfebools/2c4b8771-c94a-445e-bc58-a80af3f3c661" aria-label="Leeching on SoundCloud"><span class="arrow out" aria-hidden="true"></span></a>
               </li>
@@ -98,10 +98,12 @@
                 <a class="track-external" href="https://soundcloud.com/stryfebools/0abc9a17-7ca3-4ec2-be48-426675b850d0" aria-label="Focusrite on SoundCloud"><span class="arrow out" aria-hidden="true"></span></a>
               </li>
             </ol>
-            <div class="player" id="player" hidden>
-              <p id="player-status" role="status"></p>
-              <div id="player-frame"></div>
-              <a class="player-link" id="player-link">Open track on SoundCloud <span class="arrow out" aria-hidden="true"></span></a>
+            <div class="player" id="player">
+              <p id="player-status" role="status" hidden></p>
+              <div id="player-frame">
+                <iframe title="Leeching — SoundCloud player" height="166" loading="lazy" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin" src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2358967973&amp;color=%23585858&amp;auto_play=false&amp;show_artwork=false&amp;show_comments=false&amp;show_reposts=false&amp;show_teaser=false&amp;buying=false&amp;sharing=false&amp;download=false"></iframe>
+              </div>
+              <a class="player-link" id="player-link" href="https://soundcloud.com/stryfebools/2c4b8771-c94a-445e-bc58-a80af3f3c661">Open track on SoundCloud <span class="arrow out" aria-hidden="true"></span></a>
             </div>
           </div>
         </div>

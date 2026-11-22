@@ -53,7 +53,6 @@ let current = 0;
 let requested = 0;
 let transition;
 let requestVersion = 0;
-let pointerId;
 let lastPoint;
 let trail = [];
 let coverage = 0;
@@ -128,20 +127,17 @@ void main(){
  float edge = clamp(smokeField * .7 + ghostField * .3 + smear * .28, 0., 1.);
  float burn = smoothstep(.37, .63, edge + uTransition * 1.48 - .74);
  reveal = max(reveal, burn);
- vec3 col=mix(colA,colB,reveal);
+ float luminance = dot(mix(colA,colB,reveal), vec3(.2126,.7152,.0722));
  float smoky=smoothstep(.44,.78,smokeField)*.31;
- col=mix(col,vec3(.10,.095,.098),smoky);
- float reddish=smoothstep(.63,.86,smokeField)*(.10+.08*uProgress);
- col+=vec3(.36,.06,.015)*reddish;
- float heatEdge=smoothstep(.08,.25,smear)-smoothstep(.56,.86,smear);
- col+=vec3(.28,.055,.009)*max(0.,heatEdge)*(.14+.32*uProgress)*(1.-uTransition);
- float luminance = dot(col, vec3(.2126,.7152,.0722));
- col = mix(col, vec3(luminance), .50) * vec3(.91,.86,.83);
+ luminance=mix(luminance,.095,smoky);
+ float burnEdge=smoothstep(.08,.25,smear)-smoothstep(.56,.86,smear);
+ luminance+=max(0.,burnEdge)*(.048+.12*uProgress)*(1.-uTransition);
+ luminance*=.89;
  float vignette=1.-.52*smoothstep(.15,.89,length((uv-.5)*vec2(1.0,.86)));
- col*=vignette;
+ luminance*=vignette;
  float grain=(hash(floor(gl_FragCoord.xy*.68)+vec2(floor(uTime*4.),floor(uTime*3.)))-.5)*.034;
- col+=grain;
- gl_FragColor=vec4(col,1.);
+ luminance+=grain;
+ gl_FragColor=vec4(vec3(luminance),1.);
 }`;
 
 
@@ -248,6 +244,7 @@ function uploadScene(index, url, image) {
 }
 
 function clearDamage() {
+  lastPoint = undefined;
   trail = [];
   visited.fill(0);
   coverage = 0;
@@ -383,40 +380,29 @@ function stamp(point) {
   progress.value = Math.min(100, coverage / damageThreshold * 100);
 }
 
-surface.addEventListener('pointerdown', event => {
-  if (!motionOn || !rendererReady || !event.isPrimary || event.button !== 0) return;
-  pointerId = event.pointerId;
-  sceneTime = 0;
-  lastPoint = pointOnSurface(event);
-  surface.setPointerCapture(pointerId);
-});
-
 surface.addEventListener('pointermove', event => {
-  if (!motionOn || !rendererReady || !event.isPrimary) return;
+  if (!motionOn || !rendererReady || !event.isPrimary || requested !== current) return;
   const point = pointOnSurface(event);
-  trail.unshift({ ...point, strength: event.pointerId === pointerId ? 1.45 : .52 });
-  trail.length = Math.min(trail.length, 6);
-  if (event.pointerId !== pointerId || !lastPoint || requested !== current) return;
+  const from = lastPoint ?? point;
+  const distance = Math.hypot(point.x - from.x, point.y - from.y);
+  if (lastPoint && distance < .009) return;
 
-  const distance = Math.hypot(point.x - lastPoint.x, point.y - lastPoint.y);
-  if (distance < .009) return;
-  const steps = Math.ceil(distance / .025);
+  sceneTime = 0;
+  trail.unshift({ ...point, strength: 1.25 });
+  trail.length = Math.min(trail.length, 6);
+  const steps = Math.max(1, Math.ceil(distance / .025));
   for (let i = 1; i <= steps; i++) {
     stamp({
-      x: lastPoint.x + (point.x - lastPoint.x) * i / steps,
-      y: lastPoint.y + (point.y - lastPoint.y) * i / steps
+      x: from.x + (point.x - from.x) * i / steps,
+      y: from.y + (point.y - from.y) * i / steps
     });
   }
   lastPoint = point;
   if (coverage >= damageThreshold) requestScene((current + 1) % scenes.length);
 });
 
-for (const eventName of ['pointerup', 'pointercancel', 'lostpointercapture']) {
-  surface.addEventListener(eventName, event => {
-    if (event.pointerId !== pointerId) return;
-    pointerId = undefined;
-    lastPoint = undefined;
-  });
+for (const eventName of ['pointerleave', 'pointerup', 'pointercancel']) {
+  surface.addEventListener(eventName, () => { lastPoint = undefined; });
 }
 
 function resize() {
@@ -457,7 +443,7 @@ function drawFrame(now) {
       showScene(index, url);
       prepareTextures();
     }
-  } else if (sceneTime > hold && requested === current && pointerId === undefined) {
+  } else if (sceneTime > hold && requested === current) {
     requestScene((current + 1) % scenes.length);
   }
 

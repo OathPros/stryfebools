@@ -1,11 +1,10 @@
-const player = document.querySelector('#player');
 const playerStatus = document.querySelector('#player-status');
 const frameSlot = document.querySelector('#player-frame');
 const playerLink = document.querySelector('#player-link');
 const trackButtons = document.querySelectorAll('.queue');
 const widgetOrigin = 'https://w.soundcloud.com';
-let activeButton;
-let widget;
+let activeButton = document.querySelector('.queue[aria-pressed="true"]');
+let widget = frameSlot.querySelector('iframe');
 let readyTimeout;
 let streamTimeout;
 
@@ -22,7 +21,6 @@ function playableTrack(button) {
   activeButton?.setAttribute('aria-pressed', 'false');
   activeButton = button;
   button.setAttribute('aria-pressed', 'true');
-  player.hidden = false;
   showPlayerStatus(`Loading ${title}…`);
 
   clearTimeout(readyTimeout);
@@ -30,7 +28,7 @@ function playableTrack(button) {
   const url = new URL('/player/', widgetOrigin);
   url.search = new URLSearchParams({
     url: `https://api.soundcloud.com/tracks/${button.dataset.track}`,
-    color: '#a94437',
+    color: '#585858',
     auto_play: 'false',
     show_artwork: 'false',
     show_comments: 'false',
