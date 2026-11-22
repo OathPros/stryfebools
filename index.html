@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#121212">
-  <meta name="description" content="Listen to STRYFEBOOLS, an alternative dark hip-hop project, and explore its interactive visual archive.">
+  <meta name="description" content="Listen to STRYFEBOOLS, an alternative hip-hop project, and find live show announcements.">
   <meta property="og:type" content="website">
   <meta property="og:title" content="STRYFEBOOLS">
-  <meta property="og:description" content="Alternative dark hip-hop. Listen to STRYFEBOOLS and explore the visual archive.">
+  <meta property="og:description" content="Alternative hip-hop. Listen to STRYFEBOOLS and find live show announcements.">
   <meta property="og:image" content="https://lukegagliardi.com/stryfebools/assets/social-preview.jpg">
   <meta name="twitter:card" content="summary_large_image">
-  <title>STRYFEBOOLS — Music &amp; Visual Archive</title>
+  <title>STRYFEBOOLS — Music &amp; Live Shows</title>
   <link rel="preload" href="assets/fonts/pirata-one.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="site.css">
@@ -24,7 +24,7 @@
     <a class="brand" href="#home" aria-label="STRYFEBOOLS home">S<span aria-hidden="true">/</span>B</a>
     <nav aria-label="Main navigation">
       <a href="#music">Music</a>
-      <a href="#archive">Archive</a>
+      <a href="#shows">Live shows</a>
       <a href="#about">About</a>
     </nav>
     <a class="platform" href="https://soundcloud.com/stryfebools">SoundCloud <span class="arrow out" aria-hidden="true"></span></a>
@@ -42,21 +42,17 @@
       <div class="hero-scrim" aria-hidden="true"></div>
 
       <div class="hero-center">
-        <span class="eyebrow hero-genre">Alternative dark hip-hop</span>
+        <span class="eyebrow hero-genre">ALTERNATIVE HIPHOP</span>
         <h1 id="hero-title">STRYFEBOOLS</h1>
         <a class="listen" href="#music"><span class="arrow down" aria-hidden="true"></span> Listen now</a>
       </div>
 
-      <div class="scene-bar">
-        <div class="scene-caption" role="status" aria-atomic="true">
-          <span id="scene-index">01 / 04</span>
-          <span id="scene-title">The Destruction of Sodom and Gomorrah</span>
-        </div>
-        <div class="scene-actions" id="scene-actions" hidden>
-          <button type="button" id="motion-button" aria-pressed="true">Motion <span id="motion-state" aria-hidden="true">on</span></button>
-          <button type="button" id="next-button">Next artwork <span class="arrow" aria-hidden="true"></span></button>
-        </div>
-      </div>
+      <template id="hero-scenes">
+        <span data-full="assets/scene-1.webp" data-small="assets/scene-1-small.webp"></span>
+        <span data-full="assets/scene-2.webp" data-small="assets/scene-2-small.webp"></span>
+        <span data-full="assets/scene-3.webp" data-small="assets/scene-3-small.webp" data-focus-y=".74" data-zoom="1.10"></span>
+        <span data-full="assets/scene-4.webp" data-small="assets/scene-4-small.webp"></span>
+      </template>
     </section>
 
     <section class="music paper" id="music" aria-labelledby="music-title">
@@ -106,63 +102,10 @@
       </div>
     </section>
 
-    <section class="archive" id="archive" aria-labelledby="archive-title">
+    <section class="shows" id="shows" aria-labelledby="shows-title">
       <div class="section-wrap">
-        <div class="section-heading"><h2 id="archive-title">Visual archive</h2></div>
-        <div class="archive-grid">
-          <figure class="plate" data-scene>
-            <img src="assets/scene-1.webp" srcset="assets/scene-1-small.webp 720w, assets/scene-1.webp 1280w" sizes="(max-width: 680px) 90vw, 48vw" width="1280" height="816" alt="John Martin&#x27;s painting of a city engulfed by fire, with figures escaping through a dark landscape" loading="lazy" decoding="async">
-            <figcaption>
-              <div class="plate-name">
-                <h3>The Destruction of Sodom and Gomorrah</h3>
-                <p>John Martin · 1852</p>
-              </div>
-              <div class="plate-links">
-                <button type="button" class="view-scene" hidden>View in hero <span class="arrow up" aria-hidden="true"></span></button>
-                <a href="https://commons.wikimedia.org/wiki/File:John_Martin_-_Sodom_and_Gomorrah.jpg">Source <span class="arrow out" aria-hidden="true"></span><span class="sr-only"> for The Destruction of Sodom and Gomorrah (Public Domain Mark 1.0)</span></a>
-              </div>
-            </figcaption>
-          </figure>
-          <figure class="plate" data-scene>
-            <img src="assets/scene-2.webp" srcset="assets/scene-2-small.webp 720w, assets/scene-2.webp 1280w" sizes="(max-width: 680px) 90vw, 48vw" width="1280" height="953" alt="J. M. W. Turner&#x27;s painting of Parliament burning beside a bridge over the Thames" loading="lazy" decoding="async">
-            <figcaption>
-              <div class="plate-name">
-                <h3>The Burning of the Houses of Lords and Commons, October 16, 1834</h3>
-                <p>J. M. W. Turner · c. 1835</p>
-              </div>
-              <div class="plate-links">
-                <button type="button" class="view-scene" hidden>View in hero <span class="arrow up" aria-hidden="true"></span></button>
-                <a href="https://commons.wikimedia.org/wiki/File:Joseph_Mallord_William_Turner,_English_-_The_Burning_of_the_Houses_of_Lords_and_Commons,_October_16,_1834_-_Google_Art_Project.jpg">Source <span class="arrow out" aria-hidden="true"></span><span class="sr-only"> for The Burning of the Houses of Lords and Commons, October 16, 1834 (Public Domain Mark 1.0)</span></a>
-              </div>
-            </figcaption>
-          </figure>
-          <figure class="plate" data-scene data-focus-y=".74" data-zoom="1.10">
-            <img src="assets/scene-3.webp" srcset="assets/scene-3-small.webp 521w, assets/scene-3.webp 960w" sizes="(max-width: 680px) 90vw, 48vw" width="960" height="1327" alt="Odilon Redon&#x27;s eerie charcoal-dark lithograph featuring a disembodied face suspended in darkness" loading="lazy" decoding="async">
-            <figcaption>
-              <div class="plate-name">
-                <h3>The Vague Glimmer of a Head Suspended in Space</h3>
-                <p>Odilon Redon · 1891</p>
-              </div>
-              <div class="plate-links">
-                <button type="button" class="view-scene" hidden>View in hero <span class="arrow up" aria-hidden="true"></span></button>
-                <a href="https://commons.wikimedia.org/wiki/File:The_vague_glimmer_of_a_head_suspended_in_space_MET_DP824902.jpg">Source <span class="arrow out" aria-hidden="true"></span><span class="sr-only"> for The Vague Glimmer of a Head Suspended in Space (CC0 1.0 — Metropolitan Museum of Art)</span></a>
-              </div>
-            </figcaption>
-          </figure>
-          <figure class="plate" data-scene>
-            <img src="assets/scene-4.webp" srcset="assets/scene-4-small.webp 720w, assets/scene-4.webp 1207w" sizes="(max-width: 680px) 90vw, 48vw" width="1207" height="770" alt="Philip James de Loutherbourg&#x27;s oil painting showing coal furnaces lighting up an industrial town at night" loading="lazy" decoding="async">
-            <figcaption>
-              <div class="plate-name">
-                <h3>Coalbrookdale by Night</h3>
-                <p>Philip James de Loutherbourg · 1801</p>
-              </div>
-              <div class="plate-links">
-                <button type="button" class="view-scene" hidden>View in hero <span class="arrow up" aria-hidden="true"></span></button>
-                <a href="https://commons.wikimedia.org/wiki/File:Philipp_Jakob_Loutherbourg_d._J._-_Coalbrookdale_by_Night_-_WGA13730.jpg">Source <span class="arrow out" aria-hidden="true"></span><span class="sr-only"> for Coalbrookdale by Night (Public Domain Mark 1.0)</span></a>
-              </div>
-            </figcaption>
-          </figure>
-        </div>
+        <div class="section-heading"><h2 id="shows-title">Live shows</h2></div>
+        <p>No upcoming shows announced.</p>
       </div>
     </section>
 

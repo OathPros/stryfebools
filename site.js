@@ -2,37 +2,27 @@
 'use strict';
 
 const hero = document.querySelector('.hero');
-const heroTitle = document.querySelector('#hero-title');
 const surface = document.querySelector('.scene-surface');
 const canvas = document.querySelector('#world');
 const picture = document.querySelector('.hero-picture');
 const sceneSource = picture.querySelector('source');
 const sceneImage = picture.querySelector('img');
-const captionIndex = document.querySelector('#scene-index');
-const captionTitle = document.querySelector('#scene-title');
-const controls = document.querySelector('#scene-actions');
-const motionButton = document.querySelector('#motion-button');
-const motionState = document.querySelector('#motion-state');
-const nextButton = document.querySelector('#next-button');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const smallScreen = matchMedia('(max-width: 760px)');
-const scenes = Array.from(document.querySelectorAll('[data-scene]'), plate => {
-  const image = plate.querySelector('img');
-  return {
-    title: plate.querySelector('h3').textContent,
-    full: image.src,
-    small: image.srcset.trim().split(/\s+/)[0],
-    focusY: Number(plate.dataset.focusY ?? .5),
-    zoom: Number(plate.dataset.zoom ?? 1),
-    button: plate.querySelector('.view-scene'),
-    pending: new Map(),
-    textures: new Map()
-  };
-});
+const sceneTemplate = document.querySelector('#hero-scenes');
+const scenes = Array.from(sceneTemplate.content.children, ({ dataset }) => ({
+  full: new URL(dataset.full, document.baseURI).href,
+  small: new URL(dataset.small, document.baseURI).href,
+  focusY: Number(dataset.focusY ?? .5),
+  zoom: Number(dataset.zoom ?? 1),
+  pending: new Map(),
+  textures: new Map()
+}));
 
 if (scenes.length < 2) return;
 
 const transitionDuration = 1.65;
+const dwellDuration = 3.5;
 let gl, program;
 const uniforms = {};
 let motionOn = !reducedMotion.matches;
@@ -42,7 +32,6 @@ let rendererFailed = false;
 let current = 0;
 let requested = 0;
 let transition;
-let requestVersion = 0;
 let pointer;
 let heldPointer;
 let staticFocus = 0;
@@ -50,8 +39,7 @@ let focusPosition = { x: .5, y: .5 };
 let frame = 0;
 let lastFrame = 0;
 let clock = 0;
-let sceneTime = 0;
-let hold = sceneHold();
+let dwell = 0;
 let cssWidth = 1;
 let cssHeight = 1;
 
@@ -66,6 +54,7 @@ uniform sampler2D uNext;
 uniform vec2 uResolution;
 uniform float uTime;
 uniform float uTransition;
+uniform float uDwell;
 uniform float uAspectCurrent;
 uniform float uAspectNext;
 uniform float uFocusCurrent;
@@ -101,7 +90,8 @@ void main() {
   float tuning = smoothstep(0., .42, uTransition) * (1. - smoothstep(.56, 1., uTransition));
   float roll = 1.18 - uTransition * 1.36;
   float tracking = 1. - smoothstep(.012, .115, abs(uv.y - roll));
-  float tear = (hash(vec2(row, field)) - .5) * (tuning * .012 + tracking * tuning * .064);
+  float buildup = uDwell * (1. - smoothstep(.52, 1., uTransition));
+  float tear = (hash(vec2(row, field)) - .5) * (tuning * .012 + tracking * tuning * .064 + buildup * .023);
   vec2 separation = (uv - uSignalFocus.xy) * vec2(aspect, 1.);
   float contact = exp(-dot(separation, separation) * 46.) * uSignalFocus.z;
   tear += (hash(vec2(row + 19., field)) - .5) * contact * .048;
@@ -120,16 +110,12 @@ void main() {
   // Moderate contrast and a steady mean keep the moving snow from becoming a strobe.
   float interference = .43 + (snow - .5) * .55 + (streak - .5) * .13;
   float scanline = .94 + .06 * cos(uv.y * 290. * 6.283185);
-  float noiseMix = clamp(tuning * .90 + tracking * tuning * .16 + contact * .81, 0., .97);
+  float noiseMix = clamp(tuning * .90 + tracking * tuning * .16 + contact * .81 + buildup * .30, 0., .97);
   float gray = mix(picture, interference, noiseMix) * scanline;
   gray *= 1. - .40 * smoothstep(.18, .88, length(uv - .5));
   gl_FragColor = vec4(vec3(gray), 1.);
 }`;
 
-
-function sceneHold() {
-  return 16 + Math.random() * 10;
-}
 
 function variant(scene) {
   return smallScreen.matches ? scene.small : scene.full;
@@ -198,7 +184,7 @@ function initRenderer() {
     gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
 
     for (const key of [
-      'uCurrent', 'uNext', 'uResolution', 'uTime', 'uTransition', 'uSignalFocus',
+      'uCurrent', 'uNext', 'uResolution', 'uTime', 'uTransition', 'uDwell', 'uSignalFocus',
       'uAspectCurrent', 'uAspectNext', 'uFocusCurrent', 'uFocusNext', 'uZoomCurrent', 'uZoomNext'
     ]) {
       uniforms[key] = gl.getUniformLocation(program, key);
@@ -233,24 +219,16 @@ function showScene(index, url) {
   sceneImage.src = url === scene.small ? scene.small : scene.full;
   picture.style.setProperty('--scene-zoom', scene.zoom);
   picture.style.setProperty('--scene-y', `${(1 - scene.focusY) * 100}%`);
-  const format = number => String(number).padStart(2, '0');
-  captionIndex.textContent = `${format(index + 1)} / ${format(scenes.length)}`;
-  captionTitle.textContent = scene.title;
-  sceneTime = 0;
-  hold = sceneHold();
+  dwell = 0;
 }
 
-function updateControls() {
-  motionButton.hidden = rendererFailed;
-  motionButton.setAttribute('aria-pressed', String(motionOn));
-  motionState.textContent = motionOn ? 'on' : 'off';
+function syncSurface() {
   surface.classList.toggle('interactive', rendererReady && motionOn);
   if (!motionOn || rendererFailed) canvas.classList.remove('is-rendering');
 }
 
-async function requestScene(index, animate = true) {
+async function requestScene(index) {
   requested = index;
-  const version = ++requestVersion;
   const scene = scenes[index];
   let url = variant(scene);
   try {
@@ -262,21 +240,17 @@ async function requestScene(index, animate = true) {
       url = scene.full;
       image = await loadScene(scene, url);
     }
-    if (version !== requestVersion) return;
-
-    if (animate && motionOn && rendererReady && index !== current) {
+    if (motionOn && rendererReady) {
       transition = { index, elapsed: 0, url, entry: uploadScene(index, url, image) };
     } else {
       transition = undefined;
-      showScene(index, url);
+      requested = current;
     }
     scheduleFrame();
   } catch {
-    if (version !== requestVersion) return;
     requested = current;
     transition = undefined;
-    sceneTime = 0;
-    captionTitle.textContent = `${scenes[current].title} · Requested artwork unavailable`;
+    dwell = 0;
   }
 }
 
@@ -292,26 +266,25 @@ async function prepareTextures() {
   try {
     const image = await loadScene(scene, url);
     if (version !== preloadVersion || !motionOn || !initRenderer()) {
-      updateControls();
+      syncSurface();
       return;
     }
     activeEntry = uploadScene(index, url, image);
-    updateControls();
+    syncSurface();
     scheduleFrame();
 
     await loadScene(scenes[(index + 1) % scenes.length]);
   } catch {
-    // The current illustration remains visible. Manual navigation can retry.
+    // Keep the current artwork visible if a texture cannot be loaded.
   }
 }
 
 function pointOnSurface(event) {
   const rect = surface.getBoundingClientRect();
-  const clamp = value => Math.max(0, Math.min(.999, value));
-  return {
-    x: clamp((event.clientX - rect.left) / rect.width),
-    y: clamp(1 - (event.clientY - rect.top) / rect.height)
-  };
+  const x = (event.clientX - rect.left) / rect.width;
+  const y = 1 - (event.clientY - rect.top) / rect.height;
+  if (x < 0 || x > 1 || y < 0 || y > 1) return undefined;
+  return { x, y };
 }
 
 function moveStaticFocus(event) {
@@ -319,7 +292,8 @@ function moveStaticFocus(event) {
   pointer = pointOnSurface(event);
 }
 
-surface.addEventListener('pointermove', moveStaticFocus);
+hero.addEventListener('pointerenter', moveStaticFocus);
+hero.addEventListener('pointermove', moveStaticFocus);
 surface.addEventListener('pointerdown', event => {
   if (!motionOn || !rendererReady || !event.isPrimary || event.button !== 0) return;
   moveStaticFocus(event);
@@ -336,7 +310,7 @@ function releaseStaticFocus(event) {
 for (const eventName of ['pointerup', 'pointercancel', 'lostpointercapture']) {
   surface.addEventListener(eventName, releaseStaticFocus);
 }
-surface.addEventListener('pointerleave', () => { pointer = undefined; });
+hero.addEventListener('pointerleave', () => { pointer = undefined; });
 
 function resize() {
   cssWidth = Math.max(1, surface.clientWidth);
@@ -365,7 +339,6 @@ function drawFrame(now) {
   const delta = lastFrame ? Math.min(.065, interval) : 0;
   lastFrame = now;
   clock += delta;
-  sceneTime += delta;
   if (transition) {
     transition.elapsed += delta;
     if (transition.elapsed >= transitionDuration) {
@@ -375,11 +348,13 @@ function drawFrame(now) {
       showScene(index, url);
       prepareTextures();
     }
-  } else if (sceneTime > hold && requested === current) {
-    requestScene((current + 1) % scenes.length);
+  } else if (requested === current) {
+    dwell = pointer ? Math.min(dwell + delta, dwellDuration) : Math.max(0, dwell - delta * 2);
+    if (pointer && dwell >= dwellDuration) requestScene((current + 1) % scenes.length);
   }
 
-  const targetFocus = pointer ? (heldPointer === undefined ? .24 : 1) : 0;
+  const progress = dwell / dwellDuration;
+  const targetFocus = pointer ? (heldPointer === undefined ? .20 + progress * .67 : 1) : 0;
   staticFocus += (targetFocus - staticFocus) * (1. - Math.exp(-delta * 10));
   if (pointer) focusPosition = pointer;
 
@@ -393,6 +368,7 @@ function drawFrame(now) {
   gl.uniform2f(uniforms.uResolution, cssWidth, cssHeight);
   gl.uniform1f(uniforms.uTime, clock);
   gl.uniform1f(uniforms.uTransition, (transition?.elapsed ?? 0) / transitionDuration);
+  gl.uniform1f(uniforms.uDwell, progress * progress);
   gl.uniform3f(uniforms.uSignalFocus, focusPosition.x, focusPosition.y, staticFocus);
   gl.uniform1f(uniforms.uAspectCurrent, activeEntry.aspect);
   gl.uniform1f(uniforms.uAspectNext, nextEntry.aspect);
@@ -411,12 +387,14 @@ function setMotion(enabled) {
   if (motionOn) {
     prepareTextures();
   } else {
-    if (requested !== current) requestScene(requested, false);
+    if (transition) requested = current;
+    transition = undefined;
+    dwell = 0;
     pointer = undefined;
     heldPointer = undefined;
     staticFocus = 0;
   }
-  updateControls();
+  syncSurface();
 }
 
 canvas.addEventListener('webglcontextlost', event => {
@@ -426,29 +404,19 @@ canvas.addEventListener('webglcontextlost', event => {
   setMotion(false);
 });
 
-motionButton.addEventListener('click', () => setMotion(!motionOn));
-nextButton.addEventListener('click', () => requestScene((requested + 1) % scenes.length));
 reducedMotion.addEventListener('change', event => setMotion(!event.matches));
 smallScreen.addEventListener('change', () => {
   if (motionOn) prepareTextures();
 });
 
-for (const [index, scene] of scenes.entries()) {
-  scene.button.hidden = false;
-  scene.button.addEventListener('click', () => {
-    requestScene(index, false).then(() => {
-      if (motionOn) prepareTextures();
-    });
-    heroTitle.tabIndex = -1;
-    heroTitle.focus({ preventScroll: true });
-    hero.scrollIntoView();
-  });
-}
-
 new ResizeObserver(resize).observe(surface);
 new IntersectionObserver(([entry]) => {
   visible = entry.isIntersecting;
-  if (!visible) lastFrame = 0;
+  if (!visible) {
+    lastFrame = 0;
+    pointer = undefined;
+    dwell = 0;
+  }
   scheduleFrame();
 }).observe(hero);
 document.addEventListener('visibilitychange', () => {
@@ -456,8 +424,7 @@ document.addEventListener('visibilitychange', () => {
   scheduleFrame();
 });
 
-controls.hidden = false;
 resize();
-updateControls();
+syncSurface();
 if (motionOn) prepareTextures();
 })();
