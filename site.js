@@ -1,6 +1,18 @@
 (() => {
 'use strict';
 
+for (const link of document.querySelectorAll('.listen, .masthead .platform')) {
+  link.addEventListener('click', event => {
+    link.classList.add('signal-revealed');
+    if (link.origin === location.origin || event.button !== 0 ||
+        event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+    // Give the symbol a moment to appear before leaving for SoundCloud.
+    event.preventDefault();
+    setTimeout(() => location.assign(link.href), 220);
+  });
+}
+
 const hero = document.querySelector('.hero');
 const surface = document.querySelector('.scene-surface');
 const canvas = document.querySelector('#world');
